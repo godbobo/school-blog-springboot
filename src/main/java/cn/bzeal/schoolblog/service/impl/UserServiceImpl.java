@@ -39,26 +39,26 @@ public class UserServiceImpl implements UserService {
     public GlobalResult login(UserModel model) {
         GlobalResult result = new GlobalResult();
         // 查询用户信息
-        if(model.getUsername()!=null){
+        if (model.getUsername() != null) {
             String username = model.getUsername();
             User user = userRepository.findByIdAndPassword(Long.parseLong(username), model.getPassword());
 
             // 判断用户信息 有则生成 token 返回
-            if(user != null){
+            if (user != null) {
                 try {
                     String token = JwtTokenUtil.createToken(user.getId().toString(), user.getRole(), user.getName());
                     HashMap<String, Object> data = new HashMap<>();
                     data.put("token", token);
                     data.put("user", user);
-                    data.put("expires", 60*60*24*14); // 超时时间为两周
+                    data.put("expires", 60 * 60 * 24 * 14); // 超时时间为两周
                     result = filterDataByUser(data);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }else{
+            } else {
                 result.setCode(AppConst.RES_FAIL_USER_ERROR);
             }
-        }else {
+        } else {
             result.setCode(AppConst.RES_FAIL_NO_PARAMS);
         }
         return result;
@@ -68,11 +68,11 @@ public class UserServiceImpl implements UserService {
     public GlobalResult getInfo(Long username) {
         GlobalResult result = new GlobalResult();
         // 查询用户信息
-        if(username!=null){
+        if (username != null) {
             User user = userRepository.findById(username).orElse(null);
 
             // 判断用户信息 有则生成 token 返回
-            if(user != null){
+            if (user != null) {
                 try {
                     HashMap<String, Object> data = new HashMap<>();
                     data.put("user", user);
@@ -80,10 +80,10 @@ public class UserServiceImpl implements UserService {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }else{
+            } else {
                 result.setCode(AppConst.RES_FAIL_USER_ERROR);
             }
-        }else {
+        } else {
             result.setCode(AppConst.RES_FAIL_NO_PARAMS);
         }
         return result;
@@ -93,7 +93,7 @@ public class UserServiceImpl implements UserService {
     public GlobalResult insertUser(QueryModel model) {
         GlobalResult result = new GlobalResult();
         List<String> querys = model.getQueryList();
-        if(querys != null){
+        if (querys != null) {
             User user = new User();
             user.setName(querys.get(0));
             user.setCollege(querys.get(1));
@@ -102,7 +102,7 @@ public class UserServiceImpl implements UserService {
             user.setReg(new Timestamp(System.currentTimeMillis()));
             user.setPassword("admin");
             // TODO 默认密码应该修改为其他密码
-            if(userRepository.save(user) != null){
+            if (userRepository.save(user) != null) {
                 result = filterDataByUser(null);
             }
         }
@@ -114,30 +114,27 @@ public class UserServiceImpl implements UserService {
         GlobalResult result = new GlobalResult();
         // 定义分页，获取全部用户
         // TODO Page size must not be less than one!添加该异常验证
-        Pageable pageable = PageRequest.of(model.getPage(),model.getRow());
+        Pageable pageable = PageRequest.of(model.getPage(), model.getRow());
         List<User> list = new ArrayList<>();
         long totalPage = 0L;
-        switch (model.getQueryType()){
-            case AppConst.QUERY_USERLIST_NORMAL:
-                Page<User> page = userRepository.findAllByIdNot(Long.parseLong((String) request.getAttribute("uid")), pageable);
-                totalPage = page.getTotalElements();
-                list = page.getContent();
-                break;
-            case AppConst.QUERY_USERLIST_USERNAME:
-                // 此处一定只有一个数据或者没有数据
-                userRepository.findById(Long.parseLong((String) request.getAttribute("uid"))).ifPresent(list::add);
-                totalPage = (long) list.size();
-                break;
-            case AppConst.QUERY_USERLIST_Q:
-                if(model.getQueryList()!=null && model.getQueryList().size() == 2){
-                    // 确保按顺序加入参数
-                    page = userRepository.findAllByNameLikeAndCollegeLike(model.getQueryList().get(0), model.getQueryList().get(1), pageable);
-                    totalPage = page.getTotalElements();
-                    list = page.getContent();
-                }
-                break;
+        if (model.getQueryType() == AppConst.QUERY_USERLIST_NORMAL) {
+            Page<User> page = userRepository.findAllByIdNot(Long.parseLong((String) request.getAttribute("uid")), pageable);
+            totalPage = page.getTotalElements();
+            list = page.getContent();
+        } else if (model.getQueryType() == AppConst.QUERY_USERLIST_USERNAME) {
+            // 此处一定只有一个数据或者没有数据
+            Long id = model.getUser().getId();
+            userRepository.findById(id).ifPresent(list::add);
+            totalPage = (long) list.size();
+        } else if (model.getQueryType() >= AppConst.QUERY_USERLIST_Q) {
+            User user = model.getUser();
+            user.setName("%"+(user.getName() == null ? "" : user.getName())+"%");
+            user.setCollege("%"+(user.getCollege() == null ? "" : user.getCollege())+"%");
+            Page<User> page = userRepository.findAllByNameLikeAndCollegeLike(user.getName(), user.getCollege(), pageable);
+            totalPage = page.getTotalElements();
+            list = page.getContent();
         }
-        if(list != null && list.size() > 0){
+        if (list != null && list.size() > 0) {
             // 封装结果
             // 裁剪文章数据
             HashMap<String, Object> data = new HashMap<>();
@@ -152,10 +149,10 @@ public class UserServiceImpl implements UserService {
     public GlobalResult lstTopic(UserModel model) {
         GlobalResult result = new GlobalResult();
         // 验证 model 中的数据
-        if(model.getUsername()!=null){
+        if (model.getUsername() != null) {
             // 查询指定 id 的用户
             User user = userRepository.findById(Long.parseLong(model.getUsername())).orElse(null);
-            if (user!=null){
+            if (user != null) {
                 List<Topic> list = user.getTopics();
                 // 封装结果
                 HashMap<String, Object> data = new HashMap<>();
@@ -177,10 +174,10 @@ public class UserServiceImpl implements UserService {
     public GlobalResult lstEssay(UserModel model) {
         GlobalResult result = new GlobalResult();
         // 验证 model 中的数据
-        if(model.getUsername()!=null){
+        if (model.getUsername() != null) {
             // 查询指定 id 的用户
             User user = userRepository.findById(Long.parseLong(model.getUsername())).orElse(null);
-            if (user!=null){
+            if (user != null) {
                 List<Article> list = user.getArticles();
                 result = filterArticleByUser(list);
             }
@@ -192,10 +189,10 @@ public class UserServiceImpl implements UserService {
     public GlobalResult lstFav(UserModel model) {
         GlobalResult result = new GlobalResult();
         // 验证 model 中的数据
-        if(model.getUsername()!=null){
+        if (model.getUsername() != null) {
             // 查询指定 id 的用户
             User user = userRepository.findById(Long.parseLong(model.getUsername())).orElse(null);
-            if (user!=null){
+            if (user != null) {
                 List<Article> list = user.getFavs();
                 // 封装结果
                 result = filterArticleByUser(list);
@@ -208,10 +205,10 @@ public class UserServiceImpl implements UserService {
     public GlobalResult lstMessage(UserModel model) {
         GlobalResult result = new GlobalResult();
         // 验证 model 中的数据
-        if(model.getUsername()!=null){
+        if (model.getUsername() != null) {
             // 查询指定 id 的用户
             User user = userRepository.findById(Long.parseLong(model.getUsername())).orElse(null);
-            if (user!=null){
+            if (user != null) {
                 List<Message> list = user.getMessages();
                 // 封装结果
                 HashMap<String, Object> data = new HashMap<>();
@@ -231,7 +228,7 @@ public class UserServiceImpl implements UserService {
 
     // 对代码中的重复部分进行简单的整合
 
-    private GlobalResult filterArticleByUser(List<Article> list){
+    private GlobalResult filterArticleByUser(List<Article> list) {
         GlobalResult result = new GlobalResult();
         // 封装结果
         HashMap<String, Object> data = new HashMap<>();
@@ -246,7 +243,7 @@ public class UserServiceImpl implements UserService {
         return result;
     }
 
-    private GlobalResult filterDataByUser(HashMap<String, Object> data){
+    private GlobalResult filterDataByUser(HashMap<String, Object> data) {
         GlobalResult result = new GlobalResult();
         HashMap<String, Object> map = CommonUtil.getSuccessResult(data);
         // 添加过滤字段并生成返回结果
@@ -254,7 +251,7 @@ public class UserServiceImpl implements UserService {
         jsonUtil.filter(User.class, "id,role,name,college,tel,headimg,reg", null);
         String u = jsonUtil.toJson(map);
         // 若转换结果不为空返回结果
-        if(StringUtils.isNotBlank(u)){
+        if (StringUtils.isNotBlank(u)) {
             result.setCode(AppConst.RES_SUCCESS);
             result.setMap(u);
         }

@@ -7,6 +7,7 @@ import cn.bzeal.schoolblog.domain.ArticleRepository;
 import cn.bzeal.schoolblog.domain.User;
 import cn.bzeal.schoolblog.domain.UserRepository;
 import cn.bzeal.schoolblog.model.ArticleModel;
+import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.ArticleService;
 import cn.bzeal.schoolblog.util.CommonUtil;
 import cn.bzeal.schoolblog.util.JsonUtil;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 
 @Service
@@ -82,5 +84,10 @@ public class ArticleServiceImpl implements ArticleService {
             }
         }
         return result;
+    }
+
+    @Override
+    public GlobalResult insert(QueryModel model, HttpServletRequest request) {
+        return null;
     }
 }
