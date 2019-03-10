@@ -12,5 +12,5 @@ public interface ArticleService {
 
     GlobalResult find(ArticleModel model);
 
-    GlobalResult insert(QueryModel model, HttpServletRequest request);
+    GlobalResult add(QueryModel model, Long userid, Long topicid);
 }

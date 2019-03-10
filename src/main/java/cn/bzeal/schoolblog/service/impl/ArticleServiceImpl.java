@@ -2,10 +2,7 @@ package cn.bzeal.schoolblog.service.impl;
 
 import cn.bzeal.schoolblog.common.AppConst;
 import cn.bzeal.schoolblog.common.GlobalResult;
-import cn.bzeal.schoolblog.domain.Article;
-import cn.bzeal.schoolblog.domain.ArticleRepository;
-import cn.bzeal.schoolblog.domain.User;
-import cn.bzeal.schoolblog.domain.UserRepository;
+import cn.bzeal.schoolblog.domain.*;
 import cn.bzeal.schoolblog.model.ArticleModel;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.ArticleService;
@@ -19,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import java.sql.Timestamp;
 import java.util.HashMap;
 
 @Service
@@ -29,10 +27,13 @@ public class ArticleServiceImpl implements ArticleService {
 
     private final UserRepository userRepository;
 
+    private final TopicRepository topicRepository;
+
     @Autowired
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserRepository userRepository) {
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserRepository userRepository, TopicRepository topicRepository) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
+        this.topicRepository = topicRepository;
     }
 
     @Override
@@ -87,7 +88,25 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public GlobalResult insert(QueryModel model, HttpServletRequest request) {
-        return null;
+    public GlobalResult add(QueryModel model, Long userid, Long topicid) {
+        GlobalResult result = new GlobalResult();
+        User user = userRepository.findById(userid).orElse(null);
+        if(user!=null){
+            Article article = model.getArticle();
+            article.setAuthor(user);
+            article.setUpt(new Timestamp(System.currentTimeMillis()));
+            topicRepository.findById(topicid).ifPresent(article::setTopic);
+            setResponse(result, articleRepository.save(article) != null);
+        }
+        return result;
     }
+
+    static void setResponse(GlobalResult result, boolean b) {
+        if(b){
+            JsonUtil jsonUtil = new JsonUtil();
+            result.setCode(AppConst.RES_SUCCESS);
+            result.setMap(jsonUtil.toJson(CommonUtil.getSuccessResult(null)));
+        }
+    }
+
 }
