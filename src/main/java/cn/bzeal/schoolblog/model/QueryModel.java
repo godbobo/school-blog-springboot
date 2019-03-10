@@ -1,5 +1,6 @@
 package cn.bzeal.schoolblog.model;
 
+import cn.bzeal.schoolblog.domain.Tag;
 import cn.bzeal.schoolblog.domain.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,5 +20,6 @@ public class QueryModel {
     private int queryType; // 请求类型
 
     private User user; // 用户相关信息
+    private Tag tag; // 标签相关信息
 
 }

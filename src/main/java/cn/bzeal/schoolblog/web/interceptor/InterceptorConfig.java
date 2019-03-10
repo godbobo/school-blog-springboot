@@ -40,6 +40,8 @@ public class InterceptorConfig extends WebMvcConfigurationSupport {
         List<String> urlPatterns = new ArrayList<>();
         urlPatterns.add("/user/*");
         urlPatterns.add("/essay/*");
+        urlPatterns.add("/tag/*");
+        // TODO 每次新增加 model 时在这里将其路径加入，否则过滤器不会生效
 
         registry.addInterceptor(authTokenInterceptor()).addPathPatterns(urlPatterns);
         super.addInterceptors(registry);

@@ -20,7 +20,10 @@ public class Tag {
     private String name;
 
     @Column(nullable = false)
-    private String color = "#6CF8C9"; // 标签颜色
+    private String color = "#669EFF"; // 标签文字颜色
+
+    @Column(nullable = false)
+    private String background ="#ECF5FF";
 
     // 多对一配置
     @ManyToOne(optional = false)
