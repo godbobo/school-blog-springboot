@@ -16,7 +16,7 @@ public class TagController extends BaseController {
     private final TagService tagService;
 
     @Autowired
-    public TagController(TagService tagService) {
+    public TagController(TagService tagService){
         this.tagService = tagService;
     }
 
@@ -28,32 +28,11 @@ public class TagController extends BaseController {
         String name = model.getTag().getName();
         String color = model.getTag().getColor();
         String bg = model.getTag().getBackground();
-        if (StringUtils.isAnyBlank(id, name, color, bg)) { // 缺少任何一个参数均视为无效请求
+        if(StringUtils.isAnyBlank(id, name, color, bg)){ // 缺少任何一个参数均视为无效请求
             return CommonUtil.response(new GlobalResult());
-        } else {
+        }else {
             return CommonUtil.response(tagService.add(model, Long.parseLong(id)));
         }
-    }
-
-    // 用户的标签列表
-    @RequestMapping("/lstByUser")
-    public String lstByUser() {
-        String id = getRequest().getAttribute("uid").toString();
-        if (StringUtils.isNotBlank(id)) {
-            return CommonUtil.response(tagService.lstByUser(Long.parseLong(id)));
-        }
-        return CommonUtil.response(new GlobalResult());
-    }
-
-    // 删除用户
-    @RequestMapping("/delete")
-    public String delete(QueryModel model) {
-        String userid = getRequest().getAttribute("uid").toString();
-        Long tagid = model.getTag().getId();
-        if (StringUtils.isNotBlank(userid)) {
-            return CommonUtil.response(tagService.delete(tagid, Long.parseLong(userid)));
-        }
-        return CommonUtil.response(new GlobalResult());
     }
 
 }
