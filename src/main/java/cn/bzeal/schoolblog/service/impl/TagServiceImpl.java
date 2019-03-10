@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 
 @Service
 @Transactional
@@ -50,6 +51,50 @@ public class TagServiceImpl implements TagService {
                 HashMap<String, Object> res = CommonUtil.getSuccessResult(null);
                 JsonUtil util = new JsonUtil();
                 result.setMap(util.toJson(res));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public GlobalResult lstByUser(Long id) {
+        GlobalResult result = new GlobalResult();
+        // 首先查找到该用户
+        User user = userRepository.findById(id).orElse(null);
+        if(user!=null){
+            List<Tag> list = user.getTags();
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("lst", list);
+            // json 转换时过滤指定字段
+            JsonUtil util = new JsonUtil();
+            util.filter(Tag.class, null, "creator, articles, topics");
+            result.setCode(AppConst.RES_SUCCESS);
+            result.setMap(util.toJson(CommonUtil.getSuccessResult(data)));
+        }
+        return result;
+    }
+
+    @Override
+    public GlobalResult delete(Long tagid, Long userid) {
+        GlobalResult result = new GlobalResult();
+        // 首先查找指定的用户，查看他的标签列表中是否含有该 tagid
+        User user = userRepository.findById(userid).orElse(null);
+        Tag tag = null;
+        if(user!=null){
+            for(Tag t : user.getTags()){
+                if(t.getId().equals(tagid)){
+                    tag = t;
+                    user.getTags().remove(t);
+                    break;
+                }
+            }
+            if(tag != null) {
+                // 级联删除需要同时保存父元素的状态
+                tagRepository.delete(tag);
+                userRepository.save(user);
+                JsonUtil util = new JsonUtil();
+                result.setCode(AppConst.RES_SUCCESS);
+                result.setMap(util.toJson(CommonUtil.getSuccessResult(null)));
             }
         }
         return result;
