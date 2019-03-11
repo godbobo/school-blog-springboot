@@ -60,4 +60,7 @@ public class User {
     // 多对多关系配置
     @ManyToMany(mappedBy = "lovers")
     private List<Article> favs; // 收藏文章列表
+
+    @ManyToMany(mappedBy = "followers")
+    private List<Topic> follows; // 加入话题列表
 }

@@ -38,5 +38,9 @@ public class Topic {
     // 多对多配置
     @ManyToMany
     @JoinTable(name = "topic_tag", joinColumns = @JoinColumn(name = "topic_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
-    private List<Tag> tags;
+    private List<Tag> tags; // 标签列表
+
+    @ManyToMany
+    @JoinTable(name = "topic_user", joinColumns = @JoinColumn(name = "topic_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    private List<User> followers; // 关注者列表
 }
