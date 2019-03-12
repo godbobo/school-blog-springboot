@@ -8,4 +8,10 @@ public interface TopicService {
     // 新增话题
     GlobalResult add(QueryModel model, Long userid);
 
+    // 获取话题列表
+    GlobalResult lstById(Long userid);
+
+    // 获取用户相关话题
+    GlobalResult lstAboutId(Long userid);
+
 }

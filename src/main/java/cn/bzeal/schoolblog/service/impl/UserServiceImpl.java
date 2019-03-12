@@ -9,6 +9,7 @@ import cn.bzeal.schoolblog.service.UserService;
 import cn.bzeal.schoolblog.util.CommonUtil;
 import cn.bzeal.schoolblog.util.JsonUtil;
 import cn.bzeal.schoolblog.util.JwtTokenUtil;
+import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -157,7 +158,7 @@ public class UserServiceImpl implements UserService {
                 // 封装结果
                 HashMap<String, Object> data = new HashMap<>();
                 data.put("lst", list);
-                HashMap<String, Object> map = CommonUtil.getSuccessResult(data);
+                HashMap<String, Object> map = ResponseUtil.getSuccessResult(data);
                 // 转为 json
                 JsonUtil jsonUtil = new JsonUtil();
                 jsonUtil.filter(Topic.class, "id,name,summary,articles", null);
@@ -213,7 +214,7 @@ public class UserServiceImpl implements UserService {
                 // 封装结果
                 HashMap<String, Object> data = new HashMap<>();
                 data.put("lst", list);
-                HashMap<String, Object> map = CommonUtil.getSuccessResult(data);
+                HashMap<String, Object> map = ResponseUtil.getSuccessResult(data);
                 // 转为 json
                 JsonUtil jsonUtil = new JsonUtil();
                 jsonUtil.filter(Message.class, "id,type,content,creator", null);
@@ -233,7 +234,7 @@ public class UserServiceImpl implements UserService {
         // 封装结果
         HashMap<String, Object> data = new HashMap<>();
         data.put("lst", list);
-        HashMap<String, Object> map = CommonUtil.getSuccessResult(data);
+        HashMap<String, Object> map = ResponseUtil.getSuccessResult(data);
         // 转为 json
         JsonUtil jsonUtil = new JsonUtil();
         jsonUtil.filter(Article.class, "id,title,content,view,upt,top,hide", null);
@@ -245,7 +246,7 @@ public class UserServiceImpl implements UserService {
 
     private GlobalResult filterDataByUser(HashMap<String, Object> data) {
         GlobalResult result = new GlobalResult();
-        HashMap<String, Object> map = CommonUtil.getSuccessResult(data);
+        HashMap<String, Object> map = ResponseUtil.getSuccessResult(data);
         // 添加过滤字段并生成返回结果
         JsonUtil jsonUtil = new JsonUtil();
         jsonUtil.filter(User.class, "id,role,name,college,tel,headimg,reg", null);

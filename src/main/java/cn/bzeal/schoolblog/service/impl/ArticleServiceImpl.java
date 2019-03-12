@@ -8,6 +8,8 @@ import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.ArticleService;
 import cn.bzeal.schoolblog.util.CommonUtil;
 import cn.bzeal.schoolblog.util.JsonUtil;
+import cn.bzeal.schoolblog.util.ResponseUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,7 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 @Service
 @Transactional
@@ -28,11 +32,14 @@ public class ArticleServiceImpl implements ArticleService {
 
     private final TopicRepository topicRepository;
 
+    private final TagRepository tagRepository;
+
     @Autowired
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserRepository userRepository, TopicRepository topicRepository) {
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserRepository userRepository, TopicRepository topicRepository, TagRepository tagRepository) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
         this.topicRepository = topicRepository;
+        this.tagRepository = tagRepository;
     }
 
     @Override
@@ -70,7 +77,7 @@ public class ArticleServiceImpl implements ArticleService {
                 // 封装结果信息
                 HashMap<String, Object> data = new HashMap<>();
                 data.put("essay", article);
-                HashMap<String, Object> map = CommonUtil.getSuccessResult(data);
+                HashMap<String, Object> map = ResponseUtil.getSuccessResult(data);
                 // 转为 json
                 JsonUtil jsonUtil = new JsonUtil();
                 jsonUtil.filter(Article.class, "id,title,content,summary,view,upt,top,hide,author", null);
@@ -94,8 +101,17 @@ public class ArticleServiceImpl implements ArticleService {
             Article article = model.getArticle();
             article.setAuthor(user);
             article.setUpt(new Timestamp(System.currentTimeMillis()));
+            // TODO 先在前端尝试只传tagid完成保存功能，如果不行则在后端循环查找数据获取tag后再保存
             topicRepository.findById(topicid).ifPresent(article::setTopic);
-            setResponse(result, articleRepository.save(article) != null);
+            List<Tag> tagList = new ArrayList<>();
+            if(StringUtils.isNotBlank(model.getJsonRest())){
+                tagList = tagRepository.findByIdIn(TopicServiceImpl.getLongListFromJsonList(model.getJsonRest()));
+                article.setTags(tagList);
+                for(Tag t: tagList){
+                    t.getArticles().add(article);
+                }
+            }
+            setResponse(result, articleRepository.save(article) != null && !TopicServiceImpl.isAnyNull(tagRepository.saveAll(tagList)));
         }
         return result;
     }
@@ -104,7 +120,7 @@ public class ArticleServiceImpl implements ArticleService {
         if(b){
             JsonUtil jsonUtil = new JsonUtil();
             result.setCode(AppConst.RES_SUCCESS);
-            result.setMap(jsonUtil.toJson(CommonUtil.getSuccessResult(null)));
+            result.setMap(jsonUtil.toJson(ResponseUtil.getSuccessResult(null)));
         }
     }
 

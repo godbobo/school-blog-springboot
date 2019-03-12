@@ -8,8 +8,8 @@ import cn.bzeal.schoolblog.domain.User;
 import cn.bzeal.schoolblog.domain.UserRepository;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.TagService;
-import cn.bzeal.schoolblog.util.CommonUtil;
 import cn.bzeal.schoolblog.util.JsonUtil;
+import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +48,7 @@ public class TagServiceImpl implements TagService {
             if(tagRepository.save(tag) != null) {
                 result.setCode(AppConst.RES_SUCCESS);
                 // 将 map 转换为 json
-                HashMap<String, Object> res = CommonUtil.getSuccessResult(null);
+                HashMap<String, Object> res = ResponseUtil.getSuccessResult(null);
                 JsonUtil util = new JsonUtil();
                 result.setMap(util.toJson(res));
             }
@@ -65,11 +65,8 @@ public class TagServiceImpl implements TagService {
             List<Tag> list = user.getTags();
             HashMap<String, Object> data = new HashMap<>();
             data.put("lst", list);
-            // json 转换时过滤指定字段
-            JsonUtil util = new JsonUtil();
-            util.filter(Tag.class, null, "creator, articles, topics");
             result.setCode(AppConst.RES_SUCCESS);
-            result.setMap(util.toJson(CommonUtil.getSuccessResult(data)));
+            result.setMap(ResponseUtil.revertTag(ResponseUtil.getSuccessResult(data)));
         }
         return result;
     }
@@ -94,7 +91,7 @@ public class TagServiceImpl implements TagService {
                 userRepository.save(user);
                 JsonUtil util = new JsonUtil();
                 result.setCode(AppConst.RES_SUCCESS);
-                result.setMap(util.toJson(CommonUtil.getSuccessResult(null)));
+                result.setMap(util.toJson(ResponseUtil.getSuccessResult(null)));
             }
         }
         return result;

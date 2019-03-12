@@ -35,4 +35,23 @@ public class TopicController extends BaseController {
         return CommonUtil.response(topicService.add(model, Long.parseLong(userid)));
     }
 
+    // 话题列表
+    @RequestMapping("/lstById")
+    public String lstById() {
+        String userid = getRequest().getAttribute("uid").toString();
+        if(StringUtils.isBlank(userid)){
+            return CommonUtil.response(new GlobalResult());
+        }
+        return CommonUtil.response(topicService.lstById(Long.parseLong(userid)));
+    }
+
+    // 用户相关话题（创建、加入）
+    @RequestMapping("/lstAboutId")
+    public String lstAboutId() {
+        String userid = getRequest().getAttribute("uid").toString();
+        if(StringUtils.isBlank(userid)){
+            return CommonUtil.response(new GlobalResult());
+        }
+        return CommonUtil.response(topicService.lstAboutId(Long.parseLong(userid)));
+    }
 }

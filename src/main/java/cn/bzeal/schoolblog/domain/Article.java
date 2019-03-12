@@ -61,5 +61,4 @@ public class Article {
     @JoinTable(name = "article_user", joinColumns = @JoinColumn(name = "article_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private List<User> lovers;
 
-
 }

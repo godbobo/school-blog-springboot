@@ -66,19 +66,7 @@ public class CommonUtil {
     }
 
 
-    /**
-     * 返回成功信息
-     *
-     * @param data 特定接口的数据
-     * @return
-     */
-    public static HashMap<String, Object> getSuccessResult(HashMap<String, Object> data) {
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("code", AppConst.RES_SUCCESS);
-        map.put("msg", AppConst.RES_SUCCESS_MSG);
-        map.put("data", data);
-        return map;
-    }
+
 
 
 }

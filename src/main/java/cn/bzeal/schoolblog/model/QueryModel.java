@@ -26,4 +26,6 @@ public class QueryModel {
     private Topic topic; // 话题相关信息
     private Article article; // 文章相关信息
 
+    private String jsonRest; // 复杂数据使用json串接收
+
 }
