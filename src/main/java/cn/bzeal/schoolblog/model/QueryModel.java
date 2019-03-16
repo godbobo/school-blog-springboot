@@ -19,7 +19,7 @@ public class QueryModel {
     private int page = 0; // 当前页
     // TODO 删掉queryList 使用实体类属性来代替此中请求方式
     private List<String> queryList; // 请求参数
-    private int queryType; // 请求类型
+    private int queryType = 0; // 请求类型
 
     private User user; // 用户相关信息
     private Tag tag; // 标签相关信息

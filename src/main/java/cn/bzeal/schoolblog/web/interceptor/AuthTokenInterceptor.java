@@ -14,8 +14,9 @@ import java.util.Map;
 
 public class AuthTokenInterceptor implements HandlerInterceptor {
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         boolean handleResult = false;
+        int errortype = AppConst.RES_FAIL_NO_TOKEN;
 
         // 对非登录请求执行检查
         if(request.getServletPath().equals("/user/login")){
@@ -24,17 +25,21 @@ public class AuthTokenInterceptor implements HandlerInterceptor {
             // 获取 token 后判断是否存在
             String token = request.getHeader(AppConst.APP_TOKEN_HEADER);
             if(StringUtils.isNotBlank(token)){
-                Map<String, Claim> claimMap= JwtTokenUtil.verifyToken(token);
-                if(claimMap.get("id") != null){
-                    handleResult = true;
-                    request.setAttribute("uid", claimMap.get("id").asString());
-                    request.setAttribute("name", claimMap.get("name").asString());
-                    request.setAttribute("role", claimMap.get("role").asInt());
+                try {
+                    Map<String, Claim> claimMap= JwtTokenUtil.verifyToken(token);
+                    if(claimMap.get("id") != null){
+                        handleResult = true;
+                        request.setAttribute("uid", claimMap.get("id").asString());
+                        request.setAttribute("name", claimMap.get("name").asString());
+                        request.setAttribute("role", claimMap.get("role").asInt());
+                    }
+                } catch (Exception e) {
+                    errortype = AppConst.RES_EXPIRES_TOKEN;
                 }
             }
         }
         if(!handleResult){
-            CommonUtil.response(response);
+            CommonUtil.response(response, errortype);
         }
         return handleResult;
     }

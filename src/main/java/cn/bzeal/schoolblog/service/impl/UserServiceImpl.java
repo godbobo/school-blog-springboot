@@ -227,6 +227,15 @@ public class UserServiceImpl implements UserService {
         return result;
     }
 
+    @Override
+    public GlobalResult deleteUser(Long userid) {
+        GlobalResult result = new GlobalResult();
+        userRepository.deleteById(userid);
+        result.setCode(AppConst.RES_SUCCESS);
+        result.setMap(ResponseUtil.revert(ResponseUtil.getSuccessResult(null)));
+        return null;
+    }
+
     // 对代码中的重复部分进行简单的整合
 
     private GlobalResult filterArticleByUser(List<Article> list) {

@@ -35,4 +35,7 @@ public interface UserService {
     // 获取用户收到的消息列表
     GlobalResult lstMessage(UserModel model);
 
+    // 删除用户
+    GlobalResult deleteUser(Long userid);
+
 }

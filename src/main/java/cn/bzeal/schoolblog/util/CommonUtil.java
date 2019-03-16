@@ -12,11 +12,11 @@ import java.util.HashMap;
 public class CommonUtil {
 
     // 直接设置响应请求时，应该是没有获取到 token
-    public static void response(HttpServletResponse response) {
+    public static void response(HttpServletResponse response, int errortype) {
         response.setContentType("application/json;utf-8");
         response.setCharacterEncoding("UTF-8");
         try {
-            response.getWriter().print(getErrorResult(AppConst.RES_FAIL_NO_TOKEN));
+            response.getWriter().print(getErrorResult(errortype));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -44,6 +44,9 @@ public class CommonUtil {
             case AppConst.RES_FAIL_NO_TOKEN:
                 map.put("msg", AppConst.RES_FAIL_NO_TOKEN_MSG);
                 break;
+            case AppConst.RES_EXPIRES_TOKEN:
+                map.put("msg", AppConst.RES_EXPIRES_TOKEN_MSG);
+                break;
             case AppConst.RES_FAIL_UNKNOWN:
                 map.put("msg", AppConst.RES_FAIL_UNKNOWN_MSG);
                 break;
@@ -64,9 +67,6 @@ public class CommonUtil {
             return "json 转换失败";
         }
     }
-
-
-
 
 
 }

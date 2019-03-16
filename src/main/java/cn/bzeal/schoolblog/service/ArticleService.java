@@ -8,9 +8,15 @@ import javax.servlet.http.HttpServletRequest;
 
 public interface ArticleService {
 
-    GlobalResult lst(ArticleModel model);
+    GlobalResult lst(QueryModel model);
+
+    GlobalResult indexLst(QueryModel model);
 
     GlobalResult find(ArticleModel model);
 
     GlobalResult add(QueryModel model, Long userid, Long topicid);
+
+    GlobalResult update(QueryModel model);
+
+    GlobalResult updateRelation(QueryModel model);
 }

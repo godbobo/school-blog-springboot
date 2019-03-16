@@ -6,7 +6,6 @@ import cn.bzeal.schoolblog.domain.*;
 import cn.bzeal.schoolblog.model.ArticleModel;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.ArticleService;
-import cn.bzeal.schoolblog.util.CommonUtil;
 import cn.bzeal.schoolblog.util.JsonUtil;
 import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,37 +34,55 @@ public class ArticleServiceImpl implements ArticleService {
 
     private final TagRepository tagRepository;
 
+    private final CommentRepository commentRepository;
+
     @Autowired
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserRepository userRepository, TopicRepository topicRepository, TagRepository tagRepository) {
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserRepository userRepository, TopicRepository topicRepository, TagRepository tagRepository, CommentRepository commentRepository) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
         this.topicRepository = topicRepository;
         this.tagRepository = tagRepository;
+        this.commentRepository = commentRepository;
     }
 
     @Override
-    public GlobalResult lst(ArticleModel model) {
+    public GlobalResult lst(QueryModel model) {
         GlobalResult result = new GlobalResult();
         // 定义分页，获取全部文章
-        Pageable pageable = PageRequest.of(model.getPage(), model.getRow());
+        Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
         Page<Article> page = articleRepository.findAll(pageable);
         if(page.getTotalElements() > 0){
-            // 封装结果
-            HashMap<String, Object> map = new HashMap<>();
-            map.put("code", AppConst.RES_SUCCESS);
-            map.put("msg", AppConst.RES_SUCCESS_MSG);
             HashMap<String, Object> data = new HashMap<>();
-            // 裁剪文章数据
             data.put("lst", page.getContent());
-            map.put("data", data);
-            // 转为 json
-            JsonUtil jsonUtil = new JsonUtil();
-            jsonUtil.filter(Article.class, "id,title,summary,view,upt,top,hide,author", null);
-            jsonUtil.filter(User.class, "id,name,headimg", null);
-            String res = jsonUtil.toJson(map);
+            data.put("total", page.getTotalElements());
             result.setCode(AppConst.RES_SUCCESS);
-            result.setMap(res);
+            result.setMap(ResponseUtil.revertArticle(ResponseUtil.getSuccessResult(data)));
         }
+        return result;
+    }
+
+    // 首页包含多个文章数据 需一次性获取完毕后全部返回
+    @Override
+    public GlobalResult indexLst(QueryModel model) {
+        GlobalResult result = new GlobalResult();
+        List<Article> topList = null;
+        if (model.getPage() == 0) {
+            // 第一页需要获取置顶文章
+            topList = articleRepository.findByTop(1);
+        }
+        // 获取正文列表
+        Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
+        Page<Article> page = articleRepository.findAll(pageable);
+        // 获取推荐列表
+        Pageable recommandPageable = PageRequest.of(0, 5, new Sort(Sort.Direction.DESC, "view"));
+        List<Article> recommandList = articleRepository.findAll(recommandPageable).getContent();
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("lst", page.getContent());
+        data.put("toplst", topList);
+        data.put("recommandlst", recommandList);
+        data.put("total", page.getTotalElements());
+        result.setCode(AppConst.RES_SUCCESS);
+        result.setMap(ResponseUtil.revertArticle(ResponseUtil.getSuccessResult(data)));
         return result;
     }
 
@@ -112,6 +130,88 @@ public class ArticleServiceImpl implements ArticleService {
                 }
             }
             setResponse(result, articleRepository.save(article) != null && !TopicServiceImpl.isAnyNull(tagRepository.saveAll(tagList)));
+        }
+        return result;
+    }
+
+    @Override
+    public GlobalResult update(QueryModel model) {
+        GlobalResult  result = new GlobalResult();
+        Article uat = model.getArticle();
+        Article article = articleRepository.findById(uat.getId()).orElse(null);
+        // 对文章基础内容的修改
+        if (article != null) {
+            if (StringUtils.isNotBlank(uat.getContent())) {
+                article.setContent(uat.getContent());
+            }
+            if (uat.getHide() != null) {
+                article.setHide(uat.getHide());
+            }
+            if (StringUtils.isNotBlank(uat.getSummary())) {
+                article.setSummary(uat.getSummary());
+            }
+            if (uat.getTop() != null) {
+                article.setTop(uat.getTop());
+            }
+            if (StringUtils.isNotBlank(uat.getTitle())) {
+                article.setTitle(uat.getTitle());
+            }
+            if (uat.getView() != null) {
+                article.setView(uat.getView());
+            }
+            // 修改更新时间
+            article.setUpt(new Timestamp(System.currentTimeMillis()));
+            if (articleRepository.save(article) != null) {
+                result.setCode(AppConst.RES_SUCCESS);
+                result.setMap(ResponseUtil.revert(ResponseUtil.getSuccessResult(null)));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public GlobalResult updateRelation(QueryModel model) {
+        GlobalResult result = new GlobalResult();
+        Article article = articleRepository.findById(model.getArticle().getId()).orElse(null);
+        if (article != null) {
+            // 判断是否更新所属话题
+            if (model.getQueryType() == AppConst.ESSAY_UPDATE_TOPIC) {
+                if (model.getTopic() != null) {
+                    // 更新所属话题
+                    topicRepository.findById(model.getTopic().getId()).ifPresent(article::setTopic);
+                } else {
+                    article.setTopic(null);
+                }
+            } else if (model.getQueryType() == AppConst.ESSAY_UPDATE_COMMENTS) {
+                List<String> qls = model.getQueryList();
+                if (qls != null && qls.size() > 0) {
+                    List<Long> ids = new ArrayList<>();
+                    for (String id : qls) {
+                        ids.add(Long.parseLong(id));
+                    }
+                    article.setComments(commentRepository.findByIdIn(ids));
+                }
+            } else if (model.getQueryType() == AppConst.ESSAY_UPDATE_LOVERS) {
+                List<String> qls = model.getQueryList();
+                if (qls != null && qls.size() > 0) {
+                    List<Long> ids = new ArrayList<>();
+                    for (String id : qls) {
+                        ids.add(Long.parseLong(id));
+                    }
+                    article.setLovers(userRepository.findByIdIn(ids));
+                }
+            } else if (model.getQueryType() == AppConst.ESSAY_UPDATE_TAGS) {
+                List<String> qls = model.getQueryList();
+                if (qls != null && qls.size() > 0) {
+                    List<Long> ids = new ArrayList<>();
+                    for (String id : qls) {
+                        ids.add(Long.parseLong(id));
+                    }
+                    article.setTags(tagRepository.findByIdIn(ids));
+                }
+            }
+            result.setCode(AppConst.RES_SUCCESS);
+            result.setMap(ResponseUtil.revert(ResponseUtil.getSuccessResult(null)));
         }
         return result;
     }

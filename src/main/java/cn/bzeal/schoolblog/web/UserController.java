@@ -1,9 +1,12 @@
 package cn.bzeal.schoolblog.web;
 
+import cn.bzeal.schoolblog.common.GlobalResult;
+import cn.bzeal.schoolblog.domain.User;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.model.UserModel;
 import cn.bzeal.schoolblog.service.UserService;
 import cn.bzeal.schoolblog.util.CommonUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -65,5 +68,20 @@ public class UserController extends BaseController {
     @RequestMapping("/lstMessage")
     public String lstMessage(UserModel model){
         return CommonUtil.response(userService.lstMessage(model));
+    }
+
+    @RequestMapping("/delete")
+    public String delete(QueryModel model) {
+        // 验证登录用户身份
+        String id = getRequest().getAttribute("uid").toString();
+        Integer role = (Integer) getRequest().getAttribute("role");
+        Long deleteid = null;
+        if (model.getUser()!=null){
+            deleteid = model.getUser().getId();
+        }
+        if(StringUtils.isBlank(id) || role == null || role != 2) {
+            return CommonUtil.response(new GlobalResult());
+        }
+        return CommonUtil.response(userService.deleteUser(deleteid));
     }
 }
