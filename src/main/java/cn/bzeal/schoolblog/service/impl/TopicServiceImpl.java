@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +53,7 @@ public class TopicServiceImpl implements TopicService {
                     t.getTopics().add(topic);
                 }
             }
+            topic.setUpt(new Timestamp(System.currentTimeMillis()));
             // TODO 后期整合所有的重复方法
             ArticleServiceImpl.setResponse(result, topicRepository.save(topic)!=null && !isAnyNull(tagRepository.saveAll(tagList)));
         }

@@ -3,6 +3,7 @@ package cn.bzeal.schoolblog.domain;
 import lombok.*;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 import java.util.List;
 
 @Entity
@@ -22,6 +23,9 @@ public class Topic {
     @Lob
     @Column
     private String summary; // 话题说明
+
+    @Column(nullable = false)
+    private Timestamp upt; // 创建时间
 
     // 一对多配置
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL)

@@ -42,7 +42,8 @@ public class UserController extends BaseController {
 
     @RequestMapping("/getInfo")
     public String getInfo(){
-        return CommonUtil.response(userService.getInfo((Long)getRequest().getAttribute("uid")));
+        String userid = getRequest().getAttribute("uid").toString();
+        return CommonUtil.response(userService.getInfo(Long.parseLong(userid)));
     }
 
     @RequestMapping("/lst")

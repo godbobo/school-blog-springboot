@@ -3,6 +3,7 @@ package cn.bzeal.schoolblog.domain;
 import lombok.*;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 
 @Entity
 @NoArgsConstructor
@@ -21,6 +22,9 @@ public class Message {
     @Lob
     @Column(nullable = false)
     private String content;
+
+    @Column(nullable = false)
+    private Timestamp upt; // 创建时间
 
     // 多个消息发送给一个用户
     @ManyToOne
