@@ -12,4 +12,7 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     // 获取置顶文章
     List<Article> findByTop(Integer top);
 
+    // 获取非置顶文章
+    Page<Article> findByTopNot(int top, Pageable pageable);
+
 }

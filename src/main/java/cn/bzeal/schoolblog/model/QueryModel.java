@@ -1,9 +1,6 @@
 package cn.bzeal.schoolblog.model;
 
-import cn.bzeal.schoolblog.domain.Article;
-import cn.bzeal.schoolblog.domain.Tag;
-import cn.bzeal.schoolblog.domain.Topic;
-import cn.bzeal.schoolblog.domain.User;
+import cn.bzeal.schoolblog.domain.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,6 +22,7 @@ public class QueryModel {
     private Tag tag; // 标签相关信息
     private Topic topic; // 话题相关信息
     private Article article; // 文章相关信息
+    private Comment comment; // 评论相关信息
 
     private String jsonRest; // 复杂数据使用json串接收
 

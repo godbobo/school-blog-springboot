@@ -39,10 +39,32 @@ public class ArticleController extends BaseController {
         return CommonUtil.response(articleService.indexLst(model));
     }
 
+    // 获取指定话题下相关文章
+    @RequestMapping("lstAbout")
+    public String lstAbout(QueryModel model) {
+        if (model.getTopic().getId() == null) {
+            return CommonUtil.response(new GlobalResult());
+        }
+        return CommonUtil.response(articleService.lstAbout(model.getTopic().getId()));
+    }
+
     // 查询具体文章
     @RequestMapping("/find")
-    public String find(ArticleModel model){
+    public String find(QueryModel model){
+        if (model.getArticle().getId() == null) {
+            return CommonUtil.response(new GlobalResult());
+        }
         return CommonUtil.response(articleService.find(model));
+    }
+
+    // 收藏文章
+    @RequestMapping("/like")
+    public String like(QueryModel model){
+        String currentUserId = getRequest().getAttribute("uid").toString();
+        if (StringUtils.isBlank(currentUserId) || model.getArticle().getId() == null) {
+            return response(new GlobalResult());
+        }
+        return response(articleService.likOrNot(model.getArticle().getId(), Long.parseLong(currentUserId)));
     }
 
     // 新增文章

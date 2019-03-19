@@ -11,6 +11,9 @@ public interface TopicService {
     // 获取话题列表
     GlobalResult lstById(Long userid);
 
+    // 获取全部话题
+    GlobalResult lst(QueryModel model);
+
     // 获取用户相关话题
     GlobalResult lstAboutId(Long userid);
 

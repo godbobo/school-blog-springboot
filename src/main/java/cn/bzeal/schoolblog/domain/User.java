@@ -63,4 +63,12 @@ public class User {
 
     @ManyToMany(mappedBy = "followers")
     private List<Topic> follows; // 加入话题列表
+
+    // 用户关注列表
+    @ManyToMany
+    @JoinTable(name = "user_follow", joinColumns = @JoinColumn(name = "tofws_id"), inverseJoinColumns = @JoinColumn(name = "befws_id"))
+    private List<User> tofws;
+    // 关注者列表
+    @ManyToMany(mappedBy = "tofws")
+    private List<User> befws;
 }

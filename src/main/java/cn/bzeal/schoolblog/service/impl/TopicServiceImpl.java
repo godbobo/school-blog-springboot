@@ -10,9 +10,12 @@ import cn.bzeal.schoolblog.util.JsonUtil;
 import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.awt.print.Pageable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,6 +73,20 @@ public class TopicServiceImpl implements TopicService {
             data.put("lst", topics);
             result.setCode(AppConst.RES_SUCCESS);
             result.setMap(ResponseUtil.revertTopic(data));
+        }
+        return result;
+    }
+
+    @Override
+    public GlobalResult lst(QueryModel model) {
+        GlobalResult result = new GlobalResult();
+        PageRequest pageable = PageRequest.of(model.getPage(), model.getRow());
+        Page<Topic> page = topicRepository.findAll(pageable);
+        if (page.getTotalElements() > 0) {
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("lst", page.getContent());
+            result.setCode(AppConst.RES_SUCCESS);
+            result.setMap(ResponseUtil.revertTopicTagAuthorArticle(ResponseUtil.getSuccessResult(data)));
         }
         return result;
     }

@@ -14,11 +14,17 @@ public interface UserService {
     // 获取用户信息
     GlobalResult getInfo(Long username);
 
+    // 统计用户信息
+    GlobalResult countUser(Long userid, Long currentUserId);
+
     /**
      * 传入新增用户的基本信息
      * Query List 顺序：name, college, tel, role
      */
     GlobalResult insertUser(QueryModel model);
+
+    // 关注或取消关注用户
+    GlobalResult followOrNot(QueryModel model, Long currentUserId);
 
     // 获取用户列表
     GlobalResult lst(QueryModel model, HttpServletRequest request);

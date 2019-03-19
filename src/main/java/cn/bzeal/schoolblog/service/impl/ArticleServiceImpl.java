@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -36,13 +37,16 @@ public class ArticleServiceImpl implements ArticleService {
 
     private final CommentRepository commentRepository;
 
+    private final MessageRepository messageRepository;
+
     @Autowired
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserRepository userRepository, TopicRepository topicRepository, TagRepository tagRepository, CommentRepository commentRepository) {
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserRepository userRepository, TopicRepository topicRepository, TagRepository tagRepository, CommentRepository commentRepository, MessageRepository messageRepository) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
         this.topicRepository = topicRepository;
         this.tagRepository = tagRepository;
         this.commentRepository = commentRepository;
+        this.messageRepository = messageRepository;
     }
 
     @Override
@@ -56,7 +60,31 @@ public class ArticleServiceImpl implements ArticleService {
             data.put("lst", page.getContent());
             data.put("total", page.getTotalElements());
             result.setCode(AppConst.RES_SUCCESS);
-            result.setMap(ResponseUtil.revertArticle(ResponseUtil.getSuccessResult(data)));
+            result.setMap(ResponseUtil.revertArticleList(ResponseUtil.getSuccessResult(data)));
+        }
+        return result;
+    }
+
+    @Override
+    public GlobalResult lstAbout(Long topicid) {
+        GlobalResult result = new GlobalResult();
+        Topic topic = topicRepository.findById(topicid).orElse(null);
+        if (topic != null) {
+            HashMap<String, Object> data = new HashMap<>();
+            // 获取相关列表
+            List<Article> list = new ArrayList<>();
+            Collections.shuffle(topic.getArticles()); // 打乱顺序
+            for (int i = 0;i < topic.getArticles().size(); i++) {
+                if (i == 4) {
+                    break;
+                }
+                list.add(topic.getArticles().get(i)); // 获取话题内文章
+            }
+            if (list.size() > 0){
+                data.put("aboutlst", list);
+            }
+            result.setCode(AppConst.RES_SUCCESS);
+            result.setMap(ResponseUtil.revertArticleList(ResponseUtil.getSuccessResult(data)));
         }
         return result;
     }
@@ -72,7 +100,7 @@ public class ArticleServiceImpl implements ArticleService {
         }
         // 获取正文列表
         Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
-        Page<Article> page = articleRepository.findAll(pageable);
+        Page<Article> page = articleRepository.findByTopNot(1, pageable); // 获取非置顶文章
         // 获取推荐列表
         Pageable recommandPageable = PageRequest.of(0, 5, new Sort(Sort.Direction.DESC, "view"));
         List<Article> recommandList = articleRepository.findAll(recommandPageable).getContent();
@@ -82,31 +110,26 @@ public class ArticleServiceImpl implements ArticleService {
         data.put("recommandlst", recommandList);
         data.put("total", page.getTotalElements());
         result.setCode(AppConst.RES_SUCCESS);
-        result.setMap(ResponseUtil.revertArticle(ResponseUtil.getSuccessResult(data)));
+        result.setMap(ResponseUtil.revertArticleList(ResponseUtil.getSuccessResult(data)));
         return result;
     }
 
     @Override
-    public GlobalResult find(ArticleModel model) {
+    public GlobalResult find(QueryModel model) {
         GlobalResult result = new GlobalResult();
-        if(model.getId()!=null){
-            Article article = articleRepository.findById(model.getId()).orElse(null);
-            if(article != null){
-                // 封装结果信息
-                HashMap<String, Object> data = new HashMap<>();
-                data.put("essay", article);
-                HashMap<String, Object> map = ResponseUtil.getSuccessResult(data);
-                // 转为 json
-                JsonUtil jsonUtil = new JsonUtil();
-                jsonUtil.filter(Article.class, "id,title,content,summary,view,upt,top,hide,author", null);
-                jsonUtil.filter(User.class, "id,name,headimg", null);
-                String res = jsonUtil.toJson(map);
-                result.setCode(AppConst.RES_SUCCESS);
-                result.setMap(res);
-                // 阅读次数 +1
-                article.setView(article.getView()+1);
+        Article article = articleRepository.findById(model.getArticle().getId()).orElse(null);
+        if (article != null) {
+            User u = article.getAuthor();
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("essay", article);
+            data.put("isfav", u.getFavs().contains(article));
+            if (model.getQueryType() == AppConst.ESSAY_FIND_INDEX) {
+                // 普通视图下浏览次数+1
+                article.setView(article.getView() + 1);
                 articleRepository.save(article);
             }
+            result.setCode(AppConst.RES_SUCCESS);
+            result.setMap(ResponseUtil.revertArticleDetail(ResponseUtil.getSuccessResult(data)));
         }
         return result;
     }
@@ -214,6 +237,39 @@ public class ArticleServiceImpl implements ArticleService {
             result.setMap(ResponseUtil.revert(ResponseUtil.getSuccessResult(null)));
         }
         return result;
+    }
+
+    @Override
+    public GlobalResult likOrNot(Long articleId, Long currentUserId) {
+        GlobalResult result = new GlobalResult();
+        User user = userRepository.findById(currentUserId).orElse(null);
+        Article article = articleRepository.findById(articleId).orElse(null);
+        if (user != null && article != null) {
+            if (article.getLovers().contains(user)) {
+                article.getLovers().remove(user);
+            }else {
+                article.getLovers().add(user);
+            }
+            if (articleRepository.save(article) != null) {
+                // 保存成功后发送消息
+                if (!user.getId().equals(article.getAuthor().getId())) {
+                    sendMessage(user, article.getAuthor(), article.getTitle());
+                }
+                result.setCode(AppConst.RES_SUCCESS);
+                result.setMap(ResponseUtil.revert(ResponseUtil.getSuccessResult(null)));
+            }
+        }
+        return result;
+    }
+
+    private void sendMessage(User creator, User target, String title) {
+        Message message = new Message();
+        message.setUpt(new Timestamp(System.currentTimeMillis()));
+        message.setCreator(creator);
+        message.setTarget(target);
+        message.setType(AppConst.MESSAGE_TYPE_SYSTEM);
+        message.setContent(creator.getName() + " 收藏了你的文章：《"+title+"》");
+        messageRepository.save(message);
     }
 
     static void setResponse(GlobalResult result, boolean b) {

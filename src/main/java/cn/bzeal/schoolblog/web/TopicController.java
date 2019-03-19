@@ -1,5 +1,6 @@
 package cn.bzeal.schoolblog.web;
 
+import cn.bzeal.schoolblog.common.AppConst;
 import cn.bzeal.schoolblog.common.GlobalResult;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.TopicService;
@@ -29,7 +30,7 @@ public class TopicController extends BaseController {
         String name = model.getTopic().getName();
         String summary = model.getTopic().getSummary();
         // 必须有前三个参数且角色必须是教师以上
-        if(StringUtils.isAnyBlank(userid, name, summary) || role == null || role < 1){
+        if (StringUtils.isAnyBlank(userid, name, summary) || role == null || role < 1) {
             return CommonUtil.response(new GlobalResult());
         }
         return CommonUtil.response(topicService.add(model, Long.parseLong(userid)));
@@ -39,7 +40,7 @@ public class TopicController extends BaseController {
     @RequestMapping("/lstById")
     public String lstById() {
         String userid = getRequest().getAttribute("uid").toString();
-        if(StringUtils.isBlank(userid)){
+        if (StringUtils.isBlank(userid)) {
             return CommonUtil.response(new GlobalResult());
         }
         return CommonUtil.response(topicService.lstById(Long.parseLong(userid)));
@@ -49,9 +50,19 @@ public class TopicController extends BaseController {
     @RequestMapping("/lstAboutId")
     public String lstAboutId() {
         String userid = getRequest().getAttribute("uid").toString();
-        if(StringUtils.isBlank(userid)){
+        if (StringUtils.isBlank(userid)) {
             return CommonUtil.response(new GlobalResult());
         }
         return CommonUtil.response(topicService.lstAboutId(Long.parseLong(userid)));
+    }
+
+    // 全部话题
+    @RequestMapping("/lst")
+    public String lst(QueryModel model) {
+        Integer role = (Integer) getRequest().getAttribute("role");
+        if (role == null || role < AppConst.USER_ADMIN) {
+            return CommonUtil.response(new GlobalResult());
+        }
+        return CommonUtil.response(topicService.lst(model));
     }
 }

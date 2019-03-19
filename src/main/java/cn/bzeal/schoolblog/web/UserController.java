@@ -31,43 +31,43 @@ public class UserController extends BaseController {
     }
 
     @RequestMapping("/login")
-    public String login(UserModel model){
+    public String login(UserModel model) {
         return CommonUtil.response(userService.login(model));
     }
 
     @RequestMapping("/add")
-    public String add(QueryModel model){
+    public String add(QueryModel model) {
         return CommonUtil.response(userService.insertUser(model));
     }
 
     @RequestMapping("/getInfo")
-    public String getInfo(){
+    public String getInfo() {
         String userid = getRequest().getAttribute("uid").toString();
         return CommonUtil.response(userService.getInfo(Long.parseLong(userid)));
     }
 
     @RequestMapping("/lst")
-    public String lst(QueryModel model){
+    public String lst(QueryModel model) {
         return CommonUtil.response(userService.lst(model, getRequest()));
     }
 
     @RequestMapping("/lstTopic")
-    public String lstTopic(UserModel model){
+    public String lstTopic(UserModel model) {
         return CommonUtil.response(userService.lstTopic(model));
     }
 
     @RequestMapping("/lstEssay")
-    public String lstEssay(UserModel model){
+    public String lstEssay(UserModel model) {
         return CommonUtil.response(userService.lstEssay(model));
     }
 
     @RequestMapping("/lstFav")
-    public String lstFav(UserModel model){
+    public String lstFav(UserModel model) {
         return CommonUtil.response(userService.lstFav(model));
     }
 
     @RequestMapping("/lstMessage")
-    public String lstMessage(UserModel model){
+    public String lstMessage(UserModel model) {
         return CommonUtil.response(userService.lstMessage(model));
     }
 
@@ -77,12 +77,32 @@ public class UserController extends BaseController {
         String id = getRequest().getAttribute("uid").toString();
         Integer role = (Integer) getRequest().getAttribute("role");
         Long deleteid = null;
-        if (model.getUser()!=null){
+        if (model.getUser() != null) {
             deleteid = model.getUser().getId();
         }
-        if(StringUtils.isBlank(id) || role == null || role != 2) {
+        if (StringUtils.isBlank(id) || role == null || role != 2) {
             return CommonUtil.response(new GlobalResult());
         }
         return CommonUtil.response(userService.deleteUser(deleteid));
+    }
+
+    // 统计用户信息
+    @RequestMapping("/countUser")
+    public String countUser(QueryModel model) {
+        String currentUser = getRequest().getAttribute("uid").toString();
+        if (model.getUser() == null || model.getUser().getId() == null || StringUtils.isBlank(currentUser)) {
+            return CommonUtil.response(new GlobalResult());
+        }
+        return CommonUtil.response(userService.countUser(model.getUser().getId(), Long.parseLong(currentUser)));
+    }
+
+    // 关注或取消关注用户
+    @RequestMapping("/follow")
+    public String follow(QueryModel model) {
+        String currentUserId = getRequest().getAttribute("uid").toString();
+        if (StringUtils.isBlank(currentUserId) || model.getUser() == null || model.getUser().getId() == null) {
+            return CommonUtil.response(new GlobalResult());
+        }
+        return CommonUtil.response(userService.followOrNot(model, Long.parseLong(currentUserId)));
     }
 }

@@ -91,6 +91,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public GlobalResult countUser(Long userid, Long currentUserId) {
+        GlobalResult result = new GlobalResult();
+        User user = userRepository.findById(userid).orElse(null);
+        User currentUser = userRepository.findById(currentUserId).orElse(null);
+        if (user != null && currentUser != null) {
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("wzcount", user.getArticles().size());
+            data.put("sccount", user.getFavs().size());
+            data.put("htcount", user.getTopics().size() + user.getFollows().size());
+            data.put("fscount", user.getBefws().size());
+            data.put("isfollow", user.getBefws().contains(currentUser));
+            result.setCode(AppConst.RES_SUCCESS);
+            result.setMap(ResponseUtil.revert(ResponseUtil.getSuccessResult(data)));
+        }
+        return result;
+    }
+
+    @Override
     public GlobalResult insertUser(QueryModel model) {
         GlobalResult result = new GlobalResult();
         List<String> querys = model.getQueryList();
@@ -106,6 +124,33 @@ public class UserServiceImpl implements UserService {
             if (userRepository.save(user) != null) {
                 result = filterDataByUser(null);
             }
+        }
+        return result;
+    }
+
+    @Override
+    public GlobalResult followOrNot(QueryModel model, Long currentUserId) {
+        GlobalResult result = new GlobalResult();
+        // 不允许自己关注自己
+        if (model.getUser().getId().equals(currentUserId)){
+            return result;
+        }
+        User currentUser = userRepository.findById(currentUserId).orElse(null);
+        User targetUser = userRepository.findById(model.getUser().getId()).orElse(null);
+        if (currentUser != null && targetUser != null) {
+            if (currentUser.getTofws().contains(targetUser)) {
+                if (model.getQueryType() == AppConst.USER_FOLLOW_CANCEL) {
+                    currentUser.getTofws().remove(targetUser);
+                    targetUser.getBefws().remove(currentUser);
+                }
+            } else if (model.getQueryType() == AppConst.USER_FOLLOW) {
+                currentUser.getTofws().add(targetUser);
+                targetUser.getBefws().add(currentUser);
+            }
+            userRepository.save(currentUser);
+            userRepository.save(targetUser);
+            result.setCode(AppConst.RES_SUCCESS);
+            result.setMap(ResponseUtil.revert(ResponseUtil.getSuccessResult(null)));
         }
         return result;
     }

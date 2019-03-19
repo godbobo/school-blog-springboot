@@ -52,6 +52,7 @@ public class JsonUtil {
             mapper.setFilterProvider(jacksonFilter);
             return mapper.writeValueAsString(obj);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("转换json字符失败!");
         }
     }
