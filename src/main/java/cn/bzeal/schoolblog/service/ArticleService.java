@@ -1,26 +1,22 @@
 package cn.bzeal.schoolblog.service;
 
-import cn.bzeal.schoolblog.common.GlobalResult;
-import cn.bzeal.schoolblog.model.ArticleModel;
 import cn.bzeal.schoolblog.model.QueryModel;
-
-import javax.servlet.http.HttpServletRequest;
 
 public interface ArticleService {
 
-    GlobalResult lst(QueryModel model);
+    String lst(QueryModel model);
 
-    GlobalResult lstAbout(Long topicid);
+    String lstAbout(Long topicid);
 
-    GlobalResult indexLst(QueryModel model);
+    String indexLst(QueryModel model);
 
-    GlobalResult find(QueryModel model);
+    String find(QueryModel model);
 
-    GlobalResult add(QueryModel model, Long userid, Long topicid);
+    String add(QueryModel model, Long userid, Long topicid);
 
-    GlobalResult update(QueryModel model);
+    String update(QueryModel model);
 
-    GlobalResult updateRelation(QueryModel model);
+    String updateRelation(QueryModel model);
 
-    GlobalResult likOrNot(Long articleId, Long currentUserId);
+    String likOrNot(Long articleId, Long currentUserId);
 }

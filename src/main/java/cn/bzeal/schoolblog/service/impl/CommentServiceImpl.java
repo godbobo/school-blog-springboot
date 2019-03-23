@@ -1,7 +1,7 @@
 package cn.bzeal.schoolblog.service.impl;
 
 import cn.bzeal.schoolblog.common.AppConst;
-import cn.bzeal.schoolblog.common.GlobalResult;
+import cn.bzeal.schoolblog.common.ResponseCode;
 import cn.bzeal.schoolblog.domain.*;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.CommentService;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.util.Collections;
 import java.util.HashMap;
 
 @Service
@@ -28,7 +27,7 @@ public class CommentServiceImpl implements CommentService {
 
     private final ArticleRepository articleRepository;
 
-    private final  TopicRepository topicRepository;
+    private final TopicRepository topicRepository;
 
     private final MessageRepository messageRepository;
 
@@ -43,8 +42,7 @@ public class CommentServiceImpl implements CommentService {
 
 
     @Override
-    public GlobalResult add(QueryModel model, Long currentUserId) {
-        GlobalResult result = new GlobalResult();
+    public String add(QueryModel model, Long currentUserId) {
         User currentUser = userRepository.findById(currentUserId).orElse(null);
         if (currentUser != null) {
             Comment comment = model.getComment();
@@ -61,7 +59,7 @@ public class CommentServiceImpl implements CommentService {
             if (cmt != null) {
                 Article article = cmt.getArticle();
                 Topic topic = cmt.getTopic();
-                User targetUser = null;
+                User targetUser;
                 if (article != null) {
                     targetUser = article.getAuthor();
                     sendMessage(currentUser, targetUser, cmt.getType(), article.getTitle());
@@ -69,42 +67,36 @@ public class CommentServiceImpl implements CommentService {
                     targetUser = topic.getCreator();
                     sendMessage(currentUser, targetUser, cmt.getType(), topic.getName());
                 }
-                result.setCode(AppConst.RES_SUCCESS);
-                result.setMap(ResponseUtil.revert(ResponseUtil.getSuccessResult(null)));
+                return ResponseUtil.getResult(ResponseCode.T_SUCCESS);
+            } else {
+                return ResponseUtil.getResult(ResponseCode.T_COMMENT_FAIL_ADD);
             }
         }
-        return result;
+        return ResponseUtil.getResult(ResponseCode.T_COMMENT_NO_AUTHOR);
     }
 
     @Override
-    public GlobalResult lstById(QueryModel model) {
-        GlobalResult result = new GlobalResult();
-        Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC,"id"));
+    public String lstById(QueryModel model) {
+        Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
         HashMap<String, Object> data = new HashMap<>();
         if (model.getQueryType() == AppConst.COMMENT_LST_ESSAY) {
             Article article = articleRepository.findById(model.getArticle().getId()).orElse(null);
             if (article != null) {
                 Page<Comment> page = commentRepository.findByArticle(article, pageable);
-                if (page.getTotalElements() > 0) {
-                    data.put("commentlst", page.getContent());
-                    data.put("total", page.getTotalElements());
-                    result.setCode(AppConst.RES_SUCCESS);
-                    result.setMap(ResponseUtil.revertCommentList(ResponseUtil.getSuccessResult(data)));
-                }
+                data.put("commentlst", page.getContent());
+                data.put("total", page.getTotalElements());
+                return ResponseUtil.revertCommentList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
             }
         } else if (model.getQueryType() == AppConst.COMMENT_LST_TOPIC) {
             Topic topic = topicRepository.findById(model.getTopic().getId()).orElse(null);
             if (topic != null) {
                 Page<Comment> page = commentRepository.findByTopic(topic, pageable);
-                if (page.getTotalElements() > 0) {
-                    data.put("commentlst", page.getContent());
-                    data.put("total", page.getTotalElements());
-                    result.setCode(AppConst.RES_SUCCESS);
-                    result.setMap(ResponseUtil.revertCommentList(ResponseUtil.getSuccessResult(data)));
-                }
+                data.put("commentlst", page.getContent());
+                data.put("total", page.getTotalElements());
+                return ResponseUtil.revertCommentList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
             }
         }
-        return result;
+        return ResponseUtil.getResult(ResponseCode.N_SUCCESS);
     }
 
     // 发送消息
@@ -115,9 +107,9 @@ public class CommentServiceImpl implements CommentService {
         message.setType(AppConst.MESSAGE_TYPE_SYSTEM);
         message.setUpt(new Timestamp(System.currentTimeMillis()));
         if (type == AppConst.COMMENT_ADD_ESSAY) {
-            message.setContent(creator.getName() + " 评论了你的文章:《"+ title+"》");
-        } else if (type == AppConst.COMMENT_ADD_TOPIC){
-            message.setContent(creator.getName() + " 评论了你的话题:《"+ title+"》");
+            message.setContent(creator.getName() + " 评论了你的文章:《" + title + "》");
+        } else if (type == AppConst.COMMENT_ADD_TOPIC) {
+            message.setContent(creator.getName() + " 评论了你的话题:《" + title + "》");
         }
         messageRepository.save(message);
     }

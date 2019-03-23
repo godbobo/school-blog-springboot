@@ -1,14 +1,12 @@
 package cn.bzeal.schoolblog.service.impl;
 
-import cn.bzeal.schoolblog.common.AppConst;
-import cn.bzeal.schoolblog.common.GlobalResult;
+import cn.bzeal.schoolblog.common.ResponseCode;
 import cn.bzeal.schoolblog.domain.Tag;
 import cn.bzeal.schoolblog.domain.TagRepository;
 import cn.bzeal.schoolblog.domain.User;
 import cn.bzeal.schoolblog.domain.UserRepository;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.TagService;
-import cn.bzeal.schoolblog.util.JsonUtil;
 import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,8 +29,7 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
-    public GlobalResult add(QueryModel model, Long id) {
-        GlobalResult result = new GlobalResult();
+    public String add(QueryModel model, Long id) {
         // 首先查找到该用户
         User user = userRepository.findById(id).orElse(null);
         if(user!=null){
@@ -40,40 +37,35 @@ public class TagServiceImpl implements TagService {
             Tag tag = model.getTag();
             for (Tag t : user.getTags()){
                 if (t.getName().equals(tag.getName())){
-                    return result;
+                    return ResponseUtil.getResult(ResponseCode.T_TAG_DUPLICATE_NAME);
                 }
             }
             // 设置创建者后提交请求
             tag.setCreator(user);
             if(tagRepository.save(tag) != null) {
-                result.setCode(AppConst.RES_SUCCESS);
-                // 将 map 转换为 json
-                HashMap<String, Object> res = ResponseUtil.getSuccessResult(null);
-                JsonUtil util = new JsonUtil();
-                result.setMap(util.toJson(res));
+                return ResponseUtil.getResult(ResponseCode.T_APP_SUCCESS_ADD);
+            }else {
+                return ResponseUtil.getResult(ResponseCode.T_APP_FAIL_SAVE);
             }
         }
-        return result;
+        return ResponseUtil.getResult(ResponseCode.T_USER_EMPTY_FIND);
     }
 
     @Override
-    public GlobalResult lstByUser(Long id) {
-        GlobalResult result = new GlobalResult();
+    public String lstByUser(Long id) {
         // 首先查找到该用户
         User user = userRepository.findById(id).orElse(null);
         if(user!=null){
             List<Tag> list = user.getTags();
             HashMap<String, Object> data = new HashMap<>();
             data.put("lst", list);
-            result.setCode(AppConst.RES_SUCCESS);
-            result.setMap(ResponseUtil.revertTag(ResponseUtil.getSuccessResult(data)));
+            return ResponseUtil.revertTag(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
         }
-        return result;
+        return ResponseUtil.getResult(ResponseCode.T_USER_EMPTY_FIND);
     }
 
     @Override
-    public GlobalResult delete(Long tagid, Long userid) {
-        GlobalResult result = new GlobalResult();
+    public String delete(Long tagid, Long userid) {
         // 首先查找指定的用户，查看他的标签列表中是否含有该 tagid
         User user = userRepository.findById(userid).orElse(null);
         Tag tag = null;
@@ -89,11 +81,9 @@ public class TagServiceImpl implements TagService {
                 // 级联删除需要同时保存父元素的状态
                 tagRepository.delete(tag);
                 userRepository.save(user);
-                JsonUtil util = new JsonUtil();
-                result.setCode(AppConst.RES_SUCCESS);
-                result.setMap(util.toJson(ResponseUtil.getSuccessResult(null)));
+                return ResponseUtil.getResult(ResponseCode.T_APP_SUCCESS_DELETE);
             }
         }
-        return result;
+        return ResponseUtil.getResult(ResponseCode.T_USER_EMPTY_FIND);
     }
 }

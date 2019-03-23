@@ -1,9 +1,7 @@
 package cn.bzeal.schoolblog.web;
 
-import cn.bzeal.schoolblog.common.GlobalResult;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.TagService;
-import cn.bzeal.schoolblog.util.CommonUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,9 +27,9 @@ public class TagController extends BaseController {
         String color = model.getTag().getColor();
         String bg = model.getTag().getBackground();
         if (StringUtils.isAnyBlank(id, name, color, bg)) { // 缺少任何一个参数均视为无效请求
-            return CommonUtil.response(new GlobalResult());
+            return defaultResult();
         } else {
-            return CommonUtil.response(tagService.add(model, Long.parseLong(id)));
+            return tagService.add(model, Long.parseLong(id));
         }
     }
 
@@ -40,9 +38,9 @@ public class TagController extends BaseController {
     public String lstByUser() {
         String id = getRequest().getAttribute("uid").toString();
         if (StringUtils.isNotBlank(id)) {
-            return CommonUtil.response(tagService.lstByUser(Long.parseLong(id)));
+            return tagService.lstByUser(Long.parseLong(id));
         }
-        return CommonUtil.response(new GlobalResult());
+        return defaultResult();
     }
 
     // 删除用户
@@ -51,9 +49,9 @@ public class TagController extends BaseController {
         String userid = getRequest().getAttribute("uid").toString();
         Long tagid = model.getTag().getId();
         if (StringUtils.isNotBlank(userid)) {
-            return CommonUtil.response(tagService.delete(tagid, Long.parseLong(userid)));
+            return tagService.delete(tagid, Long.parseLong(userid));
         }
-        return CommonUtil.response(new GlobalResult());
+        return defaultResult();
     }
 
 }

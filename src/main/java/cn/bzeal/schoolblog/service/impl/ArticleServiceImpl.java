@@ -1,12 +1,11 @@
 package cn.bzeal.schoolblog.service.impl;
 
 import cn.bzeal.schoolblog.common.AppConst;
-import cn.bzeal.schoolblog.common.GlobalResult;
+import cn.bzeal.schoolblog.common.ResponseCode;
 import cn.bzeal.schoolblog.domain.*;
-import cn.bzeal.schoolblog.model.ArticleModel;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.ArticleService;
-import cn.bzeal.schoolblog.util.JsonUtil;
+import cn.bzeal.schoolblog.util.CommonUtil;
 import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,49 +49,39 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public GlobalResult lst(QueryModel model) {
-        GlobalResult result = new GlobalResult();
+    public String lst(QueryModel model) {
         // 定义分页，获取全部文章
         Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
         Page<Article> page = articleRepository.findAll(pageable);
-        if(page.getTotalElements() > 0){
-            HashMap<String, Object> data = new HashMap<>();
-            data.put("lst", page.getContent());
-            data.put("total", page.getTotalElements());
-            result.setCode(AppConst.RES_SUCCESS);
-            result.setMap(ResponseUtil.revertArticleList(ResponseUtil.getSuccessResult(data)));
-        }
-        return result;
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("lst", page.getContent());
+        data.put("total", page.getTotalElements());
+        return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
     }
 
     @Override
-    public GlobalResult lstAbout(Long topicid) {
-        GlobalResult result = new GlobalResult();
+    public String lstAbout(Long topicid) {
         Topic topic = topicRepository.findById(topicid).orElse(null);
         if (topic != null) {
             HashMap<String, Object> data = new HashMap<>();
             // 获取相关列表
             List<Article> list = new ArrayList<>();
             Collections.shuffle(topic.getArticles()); // 打乱顺序
-            for (int i = 0;i < topic.getArticles().size(); i++) {
+            for (int i = 0; i < topic.getArticles().size(); i++) {
                 if (i == 4) {
                     break;
                 }
                 list.add(topic.getArticles().get(i)); // 获取话题内文章
             }
-            if (list.size() > 0){
-                data.put("aboutlst", list);
-            }
-            result.setCode(AppConst.RES_SUCCESS);
-            result.setMap(ResponseUtil.revertArticleList(ResponseUtil.getSuccessResult(data)));
+            data.put("aboutlst", list);
+            return ResponseUtil.revertArticleList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
         }
-        return result;
+        return ResponseUtil.getResult(ResponseCode.N_TOPIC_EMPTY_FIND);
     }
 
     // 首页包含多个文章数据 需一次性获取完毕后全部返回
     @Override
-    public GlobalResult indexLst(QueryModel model) {
-        GlobalResult result = new GlobalResult();
+    public String indexLst(QueryModel model) {
         List<Article> topList = null;
         if (model.getPage() == 0) {
             // 第一页需要获取置顶文章
@@ -109,14 +98,11 @@ public class ArticleServiceImpl implements ArticleService {
         data.put("toplst", topList);
         data.put("recommandlst", recommandList);
         data.put("total", page.getTotalElements());
-        result.setCode(AppConst.RES_SUCCESS);
-        result.setMap(ResponseUtil.revertArticleList(ResponseUtil.getSuccessResult(data)));
-        return result;
+        return ResponseUtil.revertArticleList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
     }
 
     @Override
-    public GlobalResult find(QueryModel model) {
-        GlobalResult result = new GlobalResult();
+    public String find(QueryModel model) {
         Article article = articleRepository.findById(model.getArticle().getId()).orElse(null);
         if (article != null) {
             User u = article.getAuthor();
@@ -128,38 +114,38 @@ public class ArticleServiceImpl implements ArticleService {
                 article.setView(article.getView() + 1);
                 articleRepository.save(article);
             }
-            result.setCode(AppConst.RES_SUCCESS);
-            result.setMap(ResponseUtil.revertArticleDetail(ResponseUtil.getSuccessResult(data)));
+            return ResponseUtil.revertArticleDetail(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
         }
-        return result;
+        return ResponseUtil.getResult(ResponseCode.T_ESSAY_EMPTY_FIND);
     }
 
     @Override
-    public GlobalResult add(QueryModel model, Long userid, Long topicid) {
-        GlobalResult result = new GlobalResult();
+    public String add(QueryModel model, Long userid, Long topicid) {
         User user = userRepository.findById(userid).orElse(null);
-        if(user!=null){
+        if (user != null) {
             Article article = model.getArticle();
             article.setAuthor(user);
             article.setUpt(new Timestamp(System.currentTimeMillis()));
-            // TODO 先在前端尝试只传tagid完成保存功能，如果不行则在后端循环查找数据获取tag后再保存
             topicRepository.findById(topicid).ifPresent(article::setTopic);
-            List<Tag> tagList = new ArrayList<>();
-            if(StringUtils.isNotBlank(model.getJsonRest())){
-                tagList = tagRepository.findByIdIn(TopicServiceImpl.getLongListFromJsonList(model.getJsonRest()));
+            List<Tag> tagList;
+            if (StringUtils.isNotBlank(model.getJsonRest())) {
+                tagList = tagRepository.findByIdIn(CommonUtil.getLongListFromJsonList(model.getJsonRest()));
                 article.setTags(tagList);
-                for(Tag t: tagList){
+                for (Tag t : tagList) {
                     t.getArticles().add(article);
                 }
             }
-            setResponse(result, articleRepository.save(article) != null && !TopicServiceImpl.isAnyNull(tagRepository.saveAll(tagList)));
+            if (articleRepository.save(article) != null) {
+                return ResponseUtil.getResult(ResponseCode.T_SUCCESS);
+            } else {
+                return ResponseUtil.getResult(ResponseCode.T_APP_FAIL_SAVE);
+            }
         }
-        return result;
+        return ResponseUtil.getResult(ResponseCode.T_ESSAY_NO_AUTHOR);
     }
 
     @Override
-    public GlobalResult update(QueryModel model) {
-        GlobalResult  result = new GlobalResult();
+    public String update(QueryModel model) {
         Article uat = model.getArticle();
         Article article = articleRepository.findById(uat.getId()).orElse(null);
         // 对文章基础内容的修改
@@ -185,16 +171,16 @@ public class ArticleServiceImpl implements ArticleService {
             // 修改更新时间
             article.setUpt(new Timestamp(System.currentTimeMillis()));
             if (articleRepository.save(article) != null) {
-                result.setCode(AppConst.RES_SUCCESS);
-                result.setMap(ResponseUtil.revert(ResponseUtil.getSuccessResult(null)));
+                return ResponseUtil.getResult(ResponseCode.T_APP_SUCCESS_UPDATE);
+            } else {
+                return ResponseUtil.getResult(ResponseCode.T_APP_FAIL_UPDATE);
             }
         }
-        return result;
+        return ResponseUtil.getResult(ResponseCode.T_ESSAY_EMPTY_FIND);
     }
 
     @Override
-    public GlobalResult updateRelation(QueryModel model) {
-        GlobalResult result = new GlobalResult();
+    public String updateRelation(QueryModel model) {
         Article article = articleRepository.findById(model.getArticle().getId()).orElse(null);
         if (article != null) {
             // 判断是否更新所属话题
@@ -233,21 +219,19 @@ public class ArticleServiceImpl implements ArticleService {
                     article.setTags(tagRepository.findByIdIn(ids));
                 }
             }
-            result.setCode(AppConst.RES_SUCCESS);
-            result.setMap(ResponseUtil.revert(ResponseUtil.getSuccessResult(null)));
+            ResponseUtil.getResult(ResponseCode.T_APP_SUCCESS_UPDATE);
         }
-        return result;
+        return ResponseUtil.getResult(ResponseCode.T_ESSAY_EMPTY_FIND);
     }
 
     @Override
-    public GlobalResult likOrNot(Long articleId, Long currentUserId) {
-        GlobalResult result = new GlobalResult();
+    public String likOrNot(Long articleId, Long currentUserId) {
         User user = userRepository.findById(currentUserId).orElse(null);
         Article article = articleRepository.findById(articleId).orElse(null);
         if (user != null && article != null) {
             if (article.getLovers().contains(user)) {
                 article.getLovers().remove(user);
-            }else {
+            } else {
                 article.getLovers().add(user);
             }
             if (articleRepository.save(article) != null) {
@@ -255,11 +239,10 @@ public class ArticleServiceImpl implements ArticleService {
                 if (!user.getId().equals(article.getAuthor().getId())) {
                     sendMessage(user, article.getAuthor(), article.getTitle());
                 }
-                result.setCode(AppConst.RES_SUCCESS);
-                result.setMap(ResponseUtil.revert(ResponseUtil.getSuccessResult(null)));
+                return ResponseUtil.getResult(ResponseCode.T_SUCCESS);
             }
         }
-        return result;
+        return ResponseUtil.getResult(ResponseCode.T_APP_NULL_CONTENT);
     }
 
     private void sendMessage(User creator, User target, String title) {
@@ -268,16 +251,8 @@ public class ArticleServiceImpl implements ArticleService {
         message.setCreator(creator);
         message.setTarget(target);
         message.setType(AppConst.MESSAGE_TYPE_SYSTEM);
-        message.setContent(creator.getName() + " 收藏了你的文章：《"+title+"》");
+        message.setContent(creator.getName() + " 收藏了你的文章：《" + title + "》");
         messageRepository.save(message);
-    }
-
-    static void setResponse(GlobalResult result, boolean b) {
-        if(b){
-            JsonUtil jsonUtil = new JsonUtil();
-            result.setCode(AppConst.RES_SUCCESS);
-            result.setMap(jsonUtil.toJson(ResponseUtil.getSuccessResult(null)));
-        }
     }
 
 }

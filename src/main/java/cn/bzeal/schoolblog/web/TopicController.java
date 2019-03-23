@@ -1,10 +1,8 @@
 package cn.bzeal.schoolblog.web;
 
 import cn.bzeal.schoolblog.common.AppConst;
-import cn.bzeal.schoolblog.common.GlobalResult;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.TopicService;
-import cn.bzeal.schoolblog.util.CommonUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,9 +29,9 @@ public class TopicController extends BaseController {
         String summary = model.getTopic().getSummary();
         // 必须有前三个参数且角色必须是教师以上
         if (StringUtils.isAnyBlank(userid, name, summary) || role == null || role < 1) {
-            return CommonUtil.response(new GlobalResult());
+            return defaultResult();
         }
-        return CommonUtil.response(topicService.add(model, Long.parseLong(userid)));
+        return topicService.add(model, Long.parseLong(userid));
     }
 
     // 话题列表
@@ -41,9 +39,9 @@ public class TopicController extends BaseController {
     public String lstById() {
         String userid = getRequest().getAttribute("uid").toString();
         if (StringUtils.isBlank(userid)) {
-            return CommonUtil.response(new GlobalResult());
+            return defaultResult();
         }
-        return CommonUtil.response(topicService.lstById(Long.parseLong(userid)));
+        return topicService.lstById(Long.parseLong(userid));
     }
 
     // 用户相关话题（创建、加入）
@@ -51,9 +49,9 @@ public class TopicController extends BaseController {
     public String lstAboutId() {
         String userid = getRequest().getAttribute("uid").toString();
         if (StringUtils.isBlank(userid)) {
-            return CommonUtil.response(new GlobalResult());
+            return defaultResult();
         }
-        return CommonUtil.response(topicService.lstAboutId(Long.parseLong(userid)));
+        return topicService.lstAboutId(Long.parseLong(userid));
     }
 
     // 全部话题
@@ -61,8 +59,8 @@ public class TopicController extends BaseController {
     public String lst(QueryModel model) {
         Integer role = (Integer) getRequest().getAttribute("role");
         if (role == null || role < AppConst.USER_ADMIN) {
-            return CommonUtil.response(new GlobalResult());
+            return defaultResult();
         }
-        return CommonUtil.response(topicService.lst(model));
+        return topicService.lst(model);
     }
 }

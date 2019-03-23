@@ -1,25 +1,17 @@
 package cn.bzeal.schoolblog.web;
 
-import cn.bzeal.schoolblog.common.GlobalResult;
-import cn.bzeal.schoolblog.domain.User;
 import cn.bzeal.schoolblog.model.QueryModel;
-import cn.bzeal.schoolblog.model.UserModel;
 import cn.bzeal.schoolblog.service.UserService;
-import cn.bzeal.schoolblog.util.CommonUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/user")
 public class UserController extends BaseController {
 
-    // controller 负责解析 request 及封装 response，
+    // controller 负责解析 request、验证参数完整性
     // service 负责处理业务逻辑
     // dao 负责与数据库交互
 
@@ -31,44 +23,30 @@ public class UserController extends BaseController {
     }
 
     @RequestMapping("/login")
-    public String login(UserModel model) {
-        return CommonUtil.response(userService.login(model));
+    public String login(QueryModel model) {
+        if (model.getUser() == null || model.getUser().getId() == null || StringUtils.isBlank(model.getUser().getPassword())) {
+            return defaultResult();
+        }
+        return userService.login(model);
     }
 
     @RequestMapping("/add")
     public String add(QueryModel model) {
-        return CommonUtil.response(userService.insertUser(model));
+        if (model.getQueryList() == null || model.getQueryList().size() == 0) {
+            return defaultResult();
+        }
+        return userService.insertUser(model);
     }
 
     @RequestMapping("/getInfo")
     public String getInfo() {
         String userid = getRequest().getAttribute("uid").toString();
-        return CommonUtil.response(userService.getInfo(Long.parseLong(userid)));
+        return userService.getInfo(Long.parseLong(userid));
     }
 
     @RequestMapping("/lst")
     public String lst(QueryModel model) {
-        return CommonUtil.response(userService.lst(model, getRequest()));
-    }
-
-    @RequestMapping("/lstTopic")
-    public String lstTopic(UserModel model) {
-        return CommonUtil.response(userService.lstTopic(model));
-    }
-
-    @RequestMapping("/lstEssay")
-    public String lstEssay(UserModel model) {
-        return CommonUtil.response(userService.lstEssay(model));
-    }
-
-    @RequestMapping("/lstFav")
-    public String lstFav(UserModel model) {
-        return CommonUtil.response(userService.lstFav(model));
-    }
-
-    @RequestMapping("/lstMessage")
-    public String lstMessage(UserModel model) {
-        return CommonUtil.response(userService.lstMessage(model));
+        return userService.lst(model, getRequest());
     }
 
     @RequestMapping("/delete")
@@ -81,9 +59,9 @@ public class UserController extends BaseController {
             deleteid = model.getUser().getId();
         }
         if (StringUtils.isBlank(id) || role == null || role != 2) {
-            return CommonUtil.response(new GlobalResult());
+            return defaultResult();
         }
-        return CommonUtil.response(userService.deleteUser(deleteid));
+        return userService.deleteUser(deleteid);
     }
 
     // 统计用户信息
@@ -91,9 +69,9 @@ public class UserController extends BaseController {
     public String countUser(QueryModel model) {
         String currentUser = getRequest().getAttribute("uid").toString();
         if (model.getUser() == null || model.getUser().getId() == null || StringUtils.isBlank(currentUser)) {
-            return CommonUtil.response(new GlobalResult());
+            return defaultResult();
         }
-        return CommonUtil.response(userService.countUser(model.getUser().getId(), Long.parseLong(currentUser)));
+        return userService.countUser(model.getUser().getId(), Long.parseLong(currentUser));
     }
 
     // 关注或取消关注用户
@@ -101,8 +79,8 @@ public class UserController extends BaseController {
     public String follow(QueryModel model) {
         String currentUserId = getRequest().getAttribute("uid").toString();
         if (StringUtils.isBlank(currentUserId) || model.getUser() == null || model.getUser().getId() == null) {
-            return CommonUtil.response(new GlobalResult());
+            return defaultResult();
         }
-        return CommonUtil.response(userService.followOrNot(model, Long.parseLong(currentUserId)));
+        return userService.followOrNot(model, Long.parseLong(currentUserId));
     }
 }

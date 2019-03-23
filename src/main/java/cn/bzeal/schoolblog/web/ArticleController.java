@@ -1,12 +1,8 @@
 package cn.bzeal.schoolblog.web;
 
 import cn.bzeal.schoolblog.common.AppConst;
-import cn.bzeal.schoolblog.common.GlobalResult;
-import cn.bzeal.schoolblog.model.ArticleModel;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.ArticleService;
-import cn.bzeal.schoolblog.util.CommonUtil;
-import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,31 +26,31 @@ public class ArticleController extends BaseController {
             String userid = getRequest().getAttribute("uid").toString();
             Integer role = (Integer) getRequest().getAttribute("role");
             if (StringUtils.isBlank(userid) || role == null || role < AppConst.USER_ADMIN) {
-                return CommonUtil.response(new GlobalResult());
+                return defaultResult();
             }else {
-                return CommonUtil.response(articleService.lst(model));
+                return articleService.lst(model);
             }
         }
         // 查询普通视图文章列表
-        return CommonUtil.response(articleService.indexLst(model));
+        return articleService.indexLst(model);
     }
 
     // 获取指定话题下相关文章
     @RequestMapping("lstAbout")
     public String lstAbout(QueryModel model) {
         if (model.getTopic().getId() == null) {
-            return CommonUtil.response(new GlobalResult());
+            return defaultResult();
         }
-        return CommonUtil.response(articleService.lstAbout(model.getTopic().getId()));
+        return articleService.lstAbout(model.getTopic().getId());
     }
 
     // 查询具体文章
     @RequestMapping("/find")
     public String find(QueryModel model){
         if (model.getArticle().getId() == null) {
-            return CommonUtil.response(new GlobalResult());
+            return defaultResult();
         }
-        return CommonUtil.response(articleService.find(model));
+        return articleService.find(model);
     }
 
     // 收藏文章
@@ -62,9 +58,9 @@ public class ArticleController extends BaseController {
     public String like(QueryModel model){
         String currentUserId = getRequest().getAttribute("uid").toString();
         if (StringUtils.isBlank(currentUserId) || model.getArticle().getId() == null) {
-            return response(new GlobalResult());
+            return defaultResult();
         }
-        return response(articleService.likOrNot(model.getArticle().getId(), Long.parseLong(currentUserId)));
+        return articleService.likOrNot(model.getArticle().getId(), Long.parseLong(currentUserId));
     }
 
     // 新增文章
@@ -76,25 +72,25 @@ public class ArticleController extends BaseController {
         String content = model.getArticle().getContent();
         String userid = getRequest().getAttribute("uid").toString();
         if(StringUtils.isAnyBlank(title, summary, content, userid)){
-            return CommonUtil.response(new GlobalResult());
+            return defaultResult();
         }
         Long topicid = model.getTopic().getId();
-        return CommonUtil.response(articleService.add(model, Long.parseLong(userid), topicid));
+        return articleService.add(model, Long.parseLong(userid), topicid);
     }
 
     // 修改文章基础内容
     @RequestMapping("/update")
     public String update(QueryModel model) {
         if (model.getArticle() == null) {
-            return CommonUtil.response(new GlobalResult());
+            return defaultResult();
         }
-        return CommonUtil.response(articleService.update(model));
+        return articleService.update(model);
     }
 
     // 修改文章关联表信息
     @RequestMapping("/updateRelation")
     public String updateRelation(QueryModel model) {
-        return CommonUtil.response(articleService.updateRelation(model));
+        return articleService.updateRelation(model);
     }
 
 }

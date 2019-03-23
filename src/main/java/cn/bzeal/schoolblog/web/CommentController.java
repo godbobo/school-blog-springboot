@@ -1,7 +1,5 @@
 package cn.bzeal.schoolblog.web;
 
-import cn.bzeal.schoolblog.common.AppConst;
-import cn.bzeal.schoolblog.common.GlobalResult;
 import cn.bzeal.schoolblog.domain.Comment;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.CommentService;
@@ -27,18 +25,18 @@ public class CommentController extends BaseController {
         String currentUserId = getRequest().getAttribute("uid").toString(); // 当前用户
         Comment comment = model.getComment();
         if (comment == null || StringUtils.isBlank(comment.getContent()) || comment.getType() == null || ((comment.getArticle() == null || comment.getArticle().getId() == null) && (comment.getTopic() == null || comment.getTopic().getId() == null))) {
-            return response(new GlobalResult());
+            return defaultResult();
         }
-        return response(commentService.add(model, Long.parseLong(currentUserId)));
+        return commentService.add(model, Long.parseLong(currentUserId));
     }
 
     // 查看评论列表
     @RequestMapping("/lst")
     public String lst(QueryModel model) {
         if ((model.getArticle() == null || model.getArticle().getId() == null) && (model.getTopic() == null || model.getTopic().getId() == null)){
-            return response(new GlobalResult());
+            return defaultResult();
         }
-        return response(commentService.lstById(model));
+        return commentService.lstById(model);
     }
 
 }

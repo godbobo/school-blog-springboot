@@ -1,72 +1,31 @@
 package cn.bzeal.schoolblog.util;
 
-import cn.bzeal.schoolblog.common.AppConst;
-import cn.bzeal.schoolblog.common.GlobalResult;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CommonUtil {
 
-    // 直接设置响应请求时，应该是没有获取到 token
-    public static void response(HttpServletResponse response, int errortype) {
-        response.setContentType("application/json;utf-8");
-        response.setCharacterEncoding("UTF-8");
-        try {
-            response.getWriter().print(getErrorResult(errortype));
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+    // 转换json数组为List<Long>类型
+    public static List<Long> getLongListFromJsonList(String jsonRest) {
+        JsonUtil jsonUtil = new JsonUtil();
+        List<Integer> res = (List<Integer>) jsonUtil.toObject(jsonRest, ArrayList.class);
+        // 由 json 转换的list 中存的实际是Integer对象，且没有办法通过强制转换转为Long，因此使用该笨方法将其转换为Long之后继续操作
+        // 否则会在sql查询时报类型不匹配异常
+        List<Long> tags = new ArrayList<>();
+        for (Integer i : res) {
+            tags.add(new Long(i));
         }
+        return tags;
     }
 
-    public static String response(GlobalResult result) {
-        if (result.getCode() != AppConst.RES_SUCCESS) {
-            return getErrorResult(result.getCode());
+    // 判断数组中是否存在为空的元素
+    public static boolean isAnyNull(List<?> list) {
+        for (Object o : list) {
+            if (o == null) {
+                return true;
+            }
         }
-        return result.getMap();
+        return false;
     }
-
-    /**
-     * 获取错误信息
-     *
-     * @param code 错误代码
-     * @return json 格式响应体
-     */
-    private static String getErrorResult(int code) {
-        // 生成错误信息并返回
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("code", code);
-        switch (code) {
-            case AppConst.RES_FAIL_NO_TOKEN:
-                map.put("msg", AppConst.RES_FAIL_NO_TOKEN_MSG);
-                break;
-            case AppConst.RES_EXPIRES_TOKEN:
-                map.put("msg", AppConst.RES_EXPIRES_TOKEN_MSG);
-                break;
-            case AppConst.RES_FAIL_UNKNOWN:
-                map.put("msg", AppConst.RES_FAIL_UNKNOWN_MSG);
-                break;
-            case AppConst.RES_FAIL_NO_PARAMS:
-                map.put("msg", AppConst.RES_FAIL_NO_PARAMS_MSG);
-                break;
-            case AppConst.RES_FAIL_USER_ERROR:
-                map.put("msg", AppConst.RES_FAIL_USER_ERROR_MSG);
-                break;
-            default:
-                map.put("msg", AppConst.RES_FAIL_UNKNOWN_MSG);
-        }
-        map.put("data", null);
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.writeValueAsString(map);
-        } catch (JsonProcessingException e) {
-            return "json 转换失败";
-        }
-    }
-
 
 }

@@ -22,11 +22,6 @@ public class SchoolBlogApplicationTests {
 
 	@Test
 	public void contextLoads() {
-		User u = userRepository.findById(1L).get();
-		Tag tag = new Tag();
-		tag.setName("java");
-		tag.setCreator(u);
-		tagRepository.save(tag);
 	}
 
 }
