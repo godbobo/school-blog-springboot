@@ -1,5 +1,6 @@
 package cn.bzeal.schoolblog.domain;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import lombok.*;
 
 import javax.persistence.*;
@@ -11,6 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
+@JsonFilter("ArticleFilter")
 public class Article {
 
     @Id

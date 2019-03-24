@@ -1,7 +1,7 @@
 package cn.bzeal.schoolblog.web;
 
 import cn.bzeal.schoolblog.common.ResponseCode;
-import cn.bzeal.schoolblog.util.JsonUtil;
+import cn.bzeal.schoolblog.util.JacksonUtil;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -22,19 +22,19 @@ public class BaseController {
     String defaultResult() {
         HashMap<String, Object> result = new HashMap<>();
         result.put("state", ResponseCode.T_APP_NO_PARAMS);
-        JsonUtil jsonUtil = new JsonUtil();
-        return jsonUtil.toJson(result);
+        JacksonUtil jacksonUtil = new JacksonUtil();
+        return jacksonUtil.toJson(result);
     }
 
     /**
      * 某些操作需要判定用户权限，在此处统一答复
-     * @return
+     * @return json
      */
     String noPowerResult() {
         HashMap<String, Object> result = new HashMap<>();
         result.put("state", ResponseCode.T_APP_NO_POWER);
-        JsonUtil jsonUtil = new JsonUtil();
-        return jsonUtil.toJson(result);
+        JacksonUtil jacksonUtil = new JacksonUtil();
+        return jacksonUtil.toJson(result);
     }
 
 

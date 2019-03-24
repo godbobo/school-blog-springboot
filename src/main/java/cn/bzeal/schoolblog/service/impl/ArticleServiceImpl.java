@@ -88,7 +88,7 @@ public class ArticleServiceImpl implements ArticleService {
             Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
             Page<Article> page = articleRepository.findByTopic(topic, pageable);
             List<Qarticle> list = new ArrayList<>();
-            for(Article item : page.getContent()) {
+            for (Article item : page.getContent()) {
                 Qarticle qarticle = new Qarticle();
                 BeanUtils.copyProperties(item, qarticle);
                 qarticle.setLovercount(item.getLovers().size());
@@ -109,7 +109,7 @@ public class ArticleServiceImpl implements ArticleService {
             Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
             Page<Article> page = articleRepository.findByLovers(user, pageable);
             List<Qarticle> list = new ArrayList<>();
-            for(Article item : page.getContent()) {
+            for (Article item : page.getContent()) {
                 Qarticle qarticle = new Qarticle();
                 BeanUtils.copyProperties(item, qarticle);
                 qarticle.setLovercount(item.getLovers().size());
@@ -130,7 +130,7 @@ public class ArticleServiceImpl implements ArticleService {
             Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
             Page<Article> page = articleRepository.findByAuthor(user, pageable);
             List<Qarticle> list = new ArrayList<>();
-            for(Article item : page.getContent()) {
+            for (Article item : page.getContent()) {
                 Qarticle qarticle = new Qarticle();
                 BeanUtils.copyProperties(item, qarticle);
                 qarticle.setLovercount(item.getLovers().size());
@@ -171,12 +171,11 @@ public class ArticleServiceImpl implements ArticleService {
         Article article = articleRepository.findById(model.getArticle().getId()).orElse(null);
         User currentUser = userRepository.findById(userId).orElse(null);
         if (article != null) {
-            User u = article.getAuthor();
             HashMap<String, Object> data = new HashMap<>();
             data.put("essay", article);
             boolean isfav = false;
             if (currentUser != null) {
-                isfav= currentUser.getFavs().contains(article);
+                isfav = currentUser.getFavs().contains(article);
             }
             data.put("isfav", isfav);
             if (model.getQueryType() == AppConst.ESSAY_FIND_INDEX) {

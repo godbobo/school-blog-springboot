@@ -1,7 +1,8 @@
 package cn.bzeal.schoolblog.util;
 
 import cn.bzeal.schoolblog.common.ResponseCode;
-import cn.bzeal.schoolblog.domain.*;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -51,79 +52,86 @@ public class ResponseUtil {
      * 转换Map为Json，不使用任何过滤
      */
     public static String revert(HashMap<String, Object> data) {
-        JsonUtil jsonUtil = new JsonUtil();
-        return jsonUtil.toJson(data);
+        JacksonUtil jacksonUtil = new JacksonUtil();
+        return jacksonUtil.toJson(data);
     }
 
     /**
      * 转换Json时对话题的属性进行筛选
      */
     public static String revertTopic(HashMap<String, Object> data) {
-        JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(Topic.class, "id,name,summary,upt,creator");
-        jsonUtil.filter(User.class, "id,name,headimg");
-        return jsonUtil.toJson(data);
+        JacksonUtil jacksonUtil = new JacksonUtil();
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.addFilter("TopicFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "summary", "upt", "creator"));
+        filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg"));
+        return jacksonUtil.toJson(filterProvider, data);
     }
 
     /**
      * 转换json时对问藏的属性进行筛选
      */
     public static String revertArticleList(HashMap<String, Object> data) {
-        JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(Article.class, "id,title,summary,view,upt,top,hide,author,topic,tags,lovers");
-        jsonUtil.filter(User.class, "id,name,headimg");
-        jsonUtil.filter(Topic.class, "id,name");
-        jsonUtil.filter(Tag.class, "id,name,color,background");
-        return jsonUtil.toJson(data);
+        JacksonUtil jacksonUtil = new JacksonUtil();
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.addFilter("ArticleFilter", SimpleBeanPropertyFilter.serializeAllExcept("comments"));
+        filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg"));
+        filterProvider.addFilter("TopicFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name"));
+        filterProvider.addFilter("TagFilter", SimpleBeanPropertyFilter.serializeAllExcept("creator", "articles", "topics"));
+        return jacksonUtil.toJson(filterProvider, data);
     }
 
-
     public static String revertArticleDetail(HashMap<String, Object> data) {
-        JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(Article.class, "id,title,summary,content,view,upt,hide,author,tags,topic,comments");
-        jsonUtil.filter(User.class, "id,college,headimg,name");
-        jsonUtil.filter(Tag.class, "id,name");
-        jsonUtil.filter(Topic.class, "id,name");
-        jsonUtil.filter(Comment.class, "id,content,upt,creator");
-        return jsonUtil.toJson(data);
+        JacksonUtil jacksonUtil = new JacksonUtil();
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.addFilter("ArticleFilter", SimpleBeanPropertyFilter.serializeAll());
+        filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg", "college"));
+        filterProvider.addFilter("TagFilter", SimpleBeanPropertyFilter.serializeAllExcept("creator", "articles", "topics"));
+        filterProvider.addFilter("TopicFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name"));
+        filterProvider.addFilter("CommentFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "content", "upt", "creator"));
+        return jacksonUtil.toJson(filterProvider, data);
     }
 
     /**
      * 转换Json时对标签的属性进行筛选
      */
     public static String revertTag(HashMap<String, Object> data) {
-        JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(Tag.class, "id,name,color,background");
-        return jsonUtil.toJson(data);
+        JacksonUtil jacksonUtil = new JacksonUtil();
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.addFilter("TagFilter", SimpleBeanPropertyFilter.serializeAllExcept("creator", "articles", "topics"));
+        return jacksonUtil.toJson(filterProvider, data);
     }
 
     public static String revertTopicList(HashMap<String, Object> data) {
-        JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(Tag.class, "id,name,color,background");
-        jsonUtil.filter(Topic.class, "id,name,upt,summary,articles,creator,tags,followers");
-        jsonUtil.filter(User.class, "id,name");
-        jsonUtil.filter(Article.class, "id");
-        return jsonUtil.toJson(data);
+        JacksonUtil jacksonUtil = new JacksonUtil();
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.addFilter("TopicFilter", SimpleBeanPropertyFilter.serializeAllExcept("comments"));
+        filterProvider.addFilter("TagFilter", SimpleBeanPropertyFilter.serializeAllExcept("creator", "articles", "topics"));
+        filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg"));
+        filterProvider.addFilter("ArticleFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id"));
+        return jacksonUtil.toJson(filterProvider, data);
     }
 
     public static String revertCommentList(HashMap<String, Object> data) {
-        JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(Comment.class, "id,content,upt,creator");
-        jsonUtil.filter(User.class, "id,name,headimg");
-        return jsonUtil.toJson(data);
+        JacksonUtil jacksonUtil = new JacksonUtil();
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.addFilter("CommentFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "content", "upt", "creator"));
+        filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg"));
+        return jacksonUtil.toJson(filterProvider, data);
     }
 
     public static String revertUser(HashMap<String, Object> data) {
-        JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(User.class, "id,role,name,college,tel,headimg,reg");
-        return jsonUtil.toJson(data);
+        JacksonUtil jacksonUtil = new JacksonUtil();
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg", "college", "tel", "reg", "role"));
+        return jacksonUtil.toJson(filterProvider, data);
     }
 
     public static String revertMessageList(HashMap<String, Object> data) {
-        JsonUtil jsonUtil  = new JsonUtil();
-        jsonUtil.filter(Message.class, "id,type,content,upt,isread,creator");
-        jsonUtil.filter(User.class, "id,name,headimg");
-        return jsonUtil.toJson(data);
+        JacksonUtil jacksonUtil = new JacksonUtil();
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.addFilter("MessageFilter", SimpleBeanPropertyFilter.serializeAllExcept("target"));
+        filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg"));
+        return jacksonUtil.toJson(filterProvider, data);
     }
 
 }

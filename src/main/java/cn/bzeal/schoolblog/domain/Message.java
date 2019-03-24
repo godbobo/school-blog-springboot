@@ -1,5 +1,6 @@
 package cn.bzeal.schoolblog.domain;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import lombok.*;
 
 import javax.persistence.*;
@@ -10,6 +11,7 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @Getter
 @Setter
+@JsonFilter("MessageFilter")
 public class Message {
 
     @Id
