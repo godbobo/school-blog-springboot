@@ -36,6 +36,7 @@ public final class ResponseCode {
     public static final ResponseCode T_APP_SUCCESS_UPDATE = new ResponseCode("10", "修改成功");
     public static final ResponseCode T_APP_SUCCESS_ADD = new ResponseCode("10", "添加成功");
     public static final ResponseCode T_APP_SUCCESS_DELETE = new ResponseCode("10", "删除成功");
+    public static final ResponseCode T_APP_NO_POWER = new ResponseCode("1010010", "权限不足");
 
     // 文章模块
     public static final ResponseCode N_ESSAY_EMPTY_LIST = new ResponseCode("0020001", "列表为空");
@@ -52,13 +53,19 @@ public final class ResponseCode {
 
     // 话题模块
     public static final ResponseCode N_TOPIC_EMPTY_FIND = new ResponseCode("0040001", "未找到指定话题");
+    public static final ResponseCode T_TOPIC_EMPTY_FIND = new ResponseCode("1040001", "未找到指定话题");
 
     // 评论模块
     public static final ResponseCode T_COMMENT_NO_AUTHOR = new ResponseCode("1050001", "未查找到创建者信息");
     public static final ResponseCode T_COMMENT_FAIL_ADD = new ResponseCode("1050002", "评论失败");
+    public static final ResponseCode T_COMMENT_SUCCESS_ADD = new ResponseCode("10", "评论成功");
 
     // 标签模块
     public static final ResponseCode T_TAG_DUPLICATE_NAME = new ResponseCode("1060001", "已存在相同标签");
+
+    // 消息模块
+    public static final ResponseCode T_MESSAGE_SUCCESS_SEND = new ResponseCode("10", "发送成功");
+    public static final ResponseCode T_MESSAGE_FAIL_SEND = new ResponseCode("1070001", "发送失败");
 
 
     public String getCode() {

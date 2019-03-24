@@ -58,25 +58,7 @@ public class AppConst {
     public static final int MESSAGE_TYPE_USER = 1; // 用户消息
     public static final int MESSAGE_TYPE_QUERY = 2; // 请求消息
 
-    /**
-     * 返回结果常量
-     */
-    public static final int RES_SUCCESS = 0;
-    public static final String RES_SUCCESS_MSG = "执行成功";
-
-    public static final int RES_FAIL_UNKNOWN = 1000;
-    public static final String RES_FAIL_UNKNOWN_MSG = "未知错误";
-
-    public static final int RES_FAIL_NO_TOKEN = 1001;
-    public static final String RES_FAIL_NO_TOKEN_MSG = "未解析到token";
-
-    public static final int RES_EXPIRES_TOKEN = 1003;
-    public static final String RES_EXPIRES_TOKEN_MSG = "token已过期，请重新获取";
-
-    public static final int RES_FAIL_NO_PARAMS = 1002;
-    public static final String RES_FAIL_NO_PARAMS_MSG = "未解析到请求参数";
-
-    public static final int RES_FAIL_USER_ERROR = 1011;
-    public static final String RES_FAIL_USER_ERROR_MSG = "用户名或密码错误";
+    public static final int MESSAGE_LIST_READ = 0; // 已读消息列表
+    public static final int MESSAGE_LIST_UNREAD = 1; // 未读消息列表
 
 }

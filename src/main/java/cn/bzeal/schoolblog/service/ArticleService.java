@@ -8,9 +8,17 @@ public interface ArticleService {
 
     String lstAbout(Long topicid);
 
+    // 根据话题id获取文章
+    String lstByTopicId(QueryModel model);
+
+    // 根据用户id获取收藏文章
+    String lstByLover(QueryModel model);
+
+    String lstByAuthorId(QueryModel model, Long userid);
+
     String indexLst(QueryModel model);
 
-    String find(QueryModel model);
+    String find(QueryModel model, Long userId);
 
     String add(QueryModel model, Long userid, Long topicid);
 
@@ -19,4 +27,5 @@ public interface ArticleService {
     String updateRelation(QueryModel model);
 
     String likOrNot(Long articleId, Long currentUserId);
+
 }

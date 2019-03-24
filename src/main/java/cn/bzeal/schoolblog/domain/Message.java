@@ -26,6 +26,9 @@ public class Message {
     @Column(nullable = false)
     private Timestamp upt; // 创建时间
 
+    @Column(nullable = false)
+    private Integer isread = 0; // 0 为未读，1 为已读
+
     // 多个消息发送给一个用户
     @ManyToOne
     @JoinColumn(name = "target", nullable = false)

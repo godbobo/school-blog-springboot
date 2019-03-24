@@ -67,7 +67,7 @@ public class CommentServiceImpl implements CommentService {
                     targetUser = topic.getCreator();
                     sendMessage(currentUser, targetUser, cmt.getType(), topic.getName());
                 }
-                return ResponseUtil.getResult(ResponseCode.T_SUCCESS);
+                return ResponseUtil.getResult(ResponseCode.T_COMMENT_SUCCESS_ADD);
             } else {
                 return ResponseUtil.getResult(ResponseCode.T_COMMENT_FAIL_ADD);
             }

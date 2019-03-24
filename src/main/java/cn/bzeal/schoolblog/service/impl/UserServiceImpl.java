@@ -1,7 +1,6 @@
 package cn.bzeal.schoolblog.service.impl;
 
 import cn.bzeal.schoolblog.common.AppConst;
-import cn.bzeal.schoolblog.common.GlobalResult;
 import cn.bzeal.schoolblog.common.ResponseCode;
 import cn.bzeal.schoolblog.domain.User;
 import cn.bzeal.schoolblog.domain.UserRepository;
@@ -16,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.servlet.http.HttpServletRequest;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -132,14 +130,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String lst(QueryModel model, HttpServletRequest request) {
+    public String lst(QueryModel model, Long userId) {
         // 定义分页，获取全部用户
         // TODO Page size must not be less than one!添加该异常验证
         Pageable pageable = PageRequest.of(model.getPage(), model.getRow());
         List<User> list = new ArrayList<>();
         long totalPage = 0L;
         if (model.getQueryType() == AppConst.QUERY_USERLIST_NORMAL) {
-            Page<User> page = userRepository.findAllByIdNot(Long.parseLong((String) request.getAttribute("uid")), pageable);
+            Page<User> page = userRepository.findAllByIdNot(userId, pageable);
             totalPage = page.getTotalElements();
             list = page.getContent();
         } else if (model.getQueryType() == AppConst.QUERY_USERLIST_USERNAME) {

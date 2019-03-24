@@ -8,13 +8,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 
 public class JsonUtil {
 
     private static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss"; // 时间戳转换时间格式设置
     private static final ObjectMapper mapper;
 
-    JacksonJsonFilter jacksonFilter = new JacksonJsonFilter();
+    private JacksonJsonFilter jacksonFilter = new JacksonJsonFilter();
 
     static {
         SimpleDateFormat dateFormat = new SimpleDateFormat(DEFAULT_DATE_FORMAT);
@@ -31,18 +32,14 @@ public class JsonUtil {
     }
 
     public static JsonUtil me() {
-        JsonUtil jsonUtil = new JsonUtil();
-        return jsonUtil;
+        return new JsonUtil();
     }
 
-    public void filter(Class<?> clazz, String include, String filter) {
+    void filter(Class<?> clazz, String include) {
         if (clazz == null)
             return;
         if (include != null && include.length() > 0) {
             jacksonFilter.include(clazz, include.split(","));
-        }
-        if (filter != null && filter.length() > 0) {
-            jacksonFilter.filter(clazz, filter.split(","));
         }
         mapper.addMixIn(clazz, jacksonFilter.getClass());
     }
@@ -57,9 +54,10 @@ public class JsonUtil {
         }
     }
 
-    public <T> T toObject(String json, Class<T> clazz) {
+    <T> T toObject(String json) {
         try {
-            return mapper.readValue(json, clazz);
+            T t = mapper.readValue(json, (Class<T>) ArrayList.class);
+            return t;
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException("将json字符转换为对象时失败!");

@@ -26,5 +26,16 @@ public class BaseController {
         return jsonUtil.toJson(result);
     }
 
+    /**
+     * 某些操作需要判定用户权限，在此处统一答复
+     * @return
+     */
+    String noPowerResult() {
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("state", ResponseCode.T_APP_NO_POWER);
+        JsonUtil jsonUtil = new JsonUtil();
+        return jsonUtil.toJson(result);
+    }
+
 
 }

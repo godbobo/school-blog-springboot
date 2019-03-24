@@ -20,9 +20,10 @@ public class QueryModel {
 
     private User user; // 用户相关信息
     private Tag tag; // 标签相关信息
-    private Topic topic; // 话题相关信息
-    private Article article; // 文章相关信息
+    private Qtopic topic; // 话题相关信息
+    private Qarticle article; // 文章相关信息
     private Comment comment; // 评论相关信息
+    private Message message; // 消息
 
     private String jsonRest; // 复杂数据使用json串接收
 

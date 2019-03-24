@@ -60,7 +60,8 @@ public class ResponseUtil {
      */
     public static String revertTopic(HashMap<String, Object> data) {
         JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(Topic.class, "id,name,summary", null);
+        jsonUtil.filter(Topic.class, "id,name,summary,upt,creator");
+        jsonUtil.filter(User.class, "id,name,headimg");
         return jsonUtil.toJson(data);
     }
 
@@ -69,21 +70,21 @@ public class ResponseUtil {
      */
     public static String revertArticleList(HashMap<String, Object> data) {
         JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(Article.class, "id,title,summary,view,upt,top,hide,author,topic,tags,lovers", null);
-        jsonUtil.filter(User.class, "id,name,headimg", null);
-        jsonUtil.filter(Topic.class, "id,name", null);
-        jsonUtil.filter(Tag.class, "id,name,color,background", null);
+        jsonUtil.filter(Article.class, "id,title,summary,view,upt,top,hide,author,topic,tags,lovers");
+        jsonUtil.filter(User.class, "id,name,headimg");
+        jsonUtil.filter(Topic.class, "id,name");
+        jsonUtil.filter(Tag.class, "id,name,color,background");
         return jsonUtil.toJson(data);
     }
 
 
     public static String revertArticleDetail(HashMap<String, Object> data) {
         JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(Article.class, "id,title,summary,content,view,upt,hide,author,tags,topic,comments", null);
-        jsonUtil.filter(User.class, "id,college,headimg,name", null);
-        jsonUtil.filter(Tag.class, "id,name", null);
-        jsonUtil.filter(Topic.class, "id,name", null);
-        jsonUtil.filter(Comment.class, "id,content,upt,creator", null);
+        jsonUtil.filter(Article.class, "id,title,summary,content,view,upt,hide,author,tags,topic,comments");
+        jsonUtil.filter(User.class, "id,college,headimg,name");
+        jsonUtil.filter(Tag.class, "id,name");
+        jsonUtil.filter(Topic.class, "id,name");
+        jsonUtil.filter(Comment.class, "id,content,upt,creator");
         return jsonUtil.toJson(data);
     }
 
@@ -92,32 +93,36 @@ public class ResponseUtil {
      */
     public static String revertTag(HashMap<String, Object> data) {
         JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(Tag.class, "id,name,color,background", null);
+        jsonUtil.filter(Tag.class, "id,name,color,background");
         return jsonUtil.toJson(data);
     }
 
-    /**
-     * 转换json时对话题等对象的属性进行筛选
-     */
-    public static String revertTopicTagAuthorArticle(HashMap<String, Object> data) {
+    public static String revertTopicList(HashMap<String, Object> data) {
         JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(Tag.class, "id,name,color,background", null);
-        jsonUtil.filter(Topic.class, "id,name,upt,articles,creator,tags,followers", null);
-        jsonUtil.filter(User.class, "id,name", null);
-        jsonUtil.filter(Article.class, "id", null);
+        jsonUtil.filter(Tag.class, "id,name,color,background");
+        jsonUtil.filter(Topic.class, "id,name,upt,summary,articles,creator,tags,followers");
+        jsonUtil.filter(User.class, "id,name");
+        jsonUtil.filter(Article.class, "id");
         return jsonUtil.toJson(data);
     }
 
     public static String revertCommentList(HashMap<String, Object> data) {
         JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(Comment.class, "id,content,upt,creator", null);
-        jsonUtil.filter(User.class, "id,name,headimg", null);
+        jsonUtil.filter(Comment.class, "id,content,upt,creator");
+        jsonUtil.filter(User.class, "id,name,headimg");
         return jsonUtil.toJson(data);
     }
 
     public static String revertUser(HashMap<String, Object> data) {
         JsonUtil jsonUtil = new JsonUtil();
-        jsonUtil.filter(User.class, "id,role,name,college,tel,headimg,reg", null);
+        jsonUtil.filter(User.class, "id,role,name,college,tel,headimg,reg");
+        return jsonUtil.toJson(data);
+    }
+
+    public static String revertMessageList(HashMap<String, Object> data) {
+        JsonUtil jsonUtil  = new JsonUtil();
+        jsonUtil.filter(Message.class, "id,type,content,upt,isread,creator");
+        jsonUtil.filter(User.class, "id,name,headimg");
         return jsonUtil.toJson(data);
     }
 

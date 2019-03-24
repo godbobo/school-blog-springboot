@@ -12,7 +12,6 @@ spring:
           auto: update
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
     open-in-view: true
-    show-sql: true
 server:
   port: 8081
 

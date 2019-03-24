@@ -1,6 +1,5 @@
 package cn.bzeal.schoolblog.service;
 
-import cn.bzeal.schoolblog.common.GlobalResult;
 import cn.bzeal.schoolblog.model.QueryModel;
 
 public interface CommentService {

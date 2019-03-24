@@ -3,11 +3,13 @@ package cn.bzeal.schoolblog.service.impl;
 import cn.bzeal.schoolblog.common.AppConst;
 import cn.bzeal.schoolblog.common.ResponseCode;
 import cn.bzeal.schoolblog.domain.*;
+import cn.bzeal.schoolblog.model.Qarticle;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.ArticleService;
 import cn.bzeal.schoolblog.util.CommonUtil;
 import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -56,7 +58,7 @@ public class ArticleServiceImpl implements ArticleService {
         HashMap<String, Object> data = new HashMap<>();
         data.put("lst", page.getContent());
         data.put("total", page.getTotalElements());
-        return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
+        return ResponseUtil.revertArticleList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
     }
 
     @Override
@@ -77,6 +79,69 @@ public class ArticleServiceImpl implements ArticleService {
             return ResponseUtil.revertArticleList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
         }
         return ResponseUtil.getResult(ResponseCode.N_TOPIC_EMPTY_FIND);
+    }
+
+    @Override
+    public String lstByTopicId(QueryModel model) {
+        Topic topic = topicRepository.findById(model.getTopic().getId()).orElse(null);
+        if (topic != null) {
+            Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
+            Page<Article> page = articleRepository.findByTopic(topic, pageable);
+            List<Qarticle> list = new ArrayList<>();
+            for(Article item : page.getContent()) {
+                Qarticle qarticle = new Qarticle();
+                BeanUtils.copyProperties(item, qarticle);
+                qarticle.setLovercount(item.getLovers().size());
+                list.add(qarticle);
+            }
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("essaylst", list);
+            data.put("total", page.getTotalElements());
+            return ResponseUtil.revertArticleList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
+        }
+        return ResponseUtil.getResult(ResponseCode.N_TOPIC_EMPTY_FIND);
+    }
+
+    @Override
+    public String lstByLover(QueryModel model) {
+        User user = userRepository.findById(model.getUser().getId()).orElse(null);
+        if (user != null) {
+            Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
+            Page<Article> page = articleRepository.findByLovers(user, pageable);
+            List<Qarticle> list = new ArrayList<>();
+            for(Article item : page.getContent()) {
+                Qarticle qarticle = new Qarticle();
+                BeanUtils.copyProperties(item, qarticle);
+                qarticle.setLovercount(item.getLovers().size());
+                list.add(qarticle);
+            }
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("essaylst", list);
+            data.put("total", page.getTotalElements());
+            return ResponseUtil.revertArticleList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
+        }
+        return ResponseUtil.getResult(ResponseCode.T_USER_EMPTY_FIND);
+    }
+
+    @Override
+    public String lstByAuthorId(QueryModel model, Long userid) {
+        User user = userRepository.findById(userid).orElse(null);
+        if (user != null) {
+            Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
+            Page<Article> page = articleRepository.findByAuthor(user, pageable);
+            List<Qarticle> list = new ArrayList<>();
+            for(Article item : page.getContent()) {
+                Qarticle qarticle = new Qarticle();
+                BeanUtils.copyProperties(item, qarticle);
+                qarticle.setLovercount(item.getLovers().size());
+                list.add(qarticle);
+            }
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("lst", list);
+            data.put("total", page.getTotalElements());
+            return ResponseUtil.revertArticleList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
+        }
+        return ResponseUtil.getResult(ResponseCode.T_USER_EMPTY_FIND);
     }
 
     // 首页包含多个文章数据 需一次性获取完毕后全部返回
@@ -102,13 +167,18 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public String find(QueryModel model) {
+    public String find(QueryModel model, Long userId) {
         Article article = articleRepository.findById(model.getArticle().getId()).orElse(null);
+        User currentUser = userRepository.findById(userId).orElse(null);
         if (article != null) {
             User u = article.getAuthor();
             HashMap<String, Object> data = new HashMap<>();
             data.put("essay", article);
-            data.put("isfav", u.getFavs().contains(article));
+            boolean isfav = false;
+            if (currentUser != null) {
+                isfav= currentUser.getFavs().contains(article);
+            }
+            data.put("isfav", isfav);
             if (model.getQueryType() == AppConst.ESSAY_FIND_INDEX) {
                 // 普通视图下浏览次数+1
                 article.setView(article.getView() + 1);
@@ -239,7 +309,7 @@ public class ArticleServiceImpl implements ArticleService {
                 if (!user.getId().equals(article.getAuthor().getId())) {
                     sendMessage(user, article.getAuthor(), article.getTitle());
                 }
-                return ResponseUtil.getResult(ResponseCode.T_SUCCESS);
+                return ResponseUtil.getResult(ResponseCode.N_SUCCESS);
             }
         }
         return ResponseUtil.getResult(ResponseCode.T_APP_NULL_CONTENT);

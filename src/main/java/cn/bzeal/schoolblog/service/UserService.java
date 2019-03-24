@@ -25,7 +25,7 @@ public interface UserService {
     String followOrNot(QueryModel model, Long currentUserId);
 
     // 获取用户列表
-    String lst(QueryModel model, HttpServletRequest request);
+    String lst(QueryModel model, Long userId);
 
     // 删除用户
     String deleteUser(Long userid);

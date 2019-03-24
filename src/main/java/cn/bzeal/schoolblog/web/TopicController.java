@@ -1,6 +1,5 @@
 package cn.bzeal.schoolblog.web;
 
-import cn.bzeal.schoolblog.common.AppConst;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.TopicService;
 import org.apache.commons.lang3.StringUtils;
@@ -44,6 +43,24 @@ public class TopicController extends BaseController {
         return topicService.lstById(Long.parseLong(userid));
     }
 
+    // 根据创建者获取话题列表
+    @RequestMapping("/lstByCreator")
+    public String lstByCreator(QueryModel model) {
+        if (model.getUser() == null || model.getUser().getId() == null) {
+            return defaultResult();
+        }
+        return topicService.lstByCreator(model);
+    }
+
+    // 根据id查询话题
+    @RequestMapping("/find")
+    public String find(QueryModel model) {
+        if (model.getTopic() == null || model.getTopic().getId() == null) {
+            return defaultResult();
+        }
+        return topicService.find(model.getTopic().getId());
+    }
+
     // 用户相关话题（创建、加入）
     @RequestMapping("/lstAboutId")
     public String lstAboutId() {
@@ -54,13 +71,18 @@ public class TopicController extends BaseController {
         return topicService.lstAboutId(Long.parseLong(userid));
     }
 
+    // 根据用户id查询计入的话题列表
+    @RequestMapping("lstByFollower")
+    public String lstByFollower(QueryModel model) {
+        if (model.getUser() == null || model.getUser().getId() == null) {
+            return defaultResult();
+        }
+        return topicService.lstByFollower(model);
+    }
+
     // 全部话题
     @RequestMapping("/lst")
     public String lst(QueryModel model) {
-        Integer role = (Integer) getRequest().getAttribute("role");
-        if (role == null || role < AppConst.USER_ADMIN) {
-            return defaultResult();
-        }
         return topicService.lst(model);
     }
 }

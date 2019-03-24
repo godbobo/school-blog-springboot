@@ -23,10 +23,9 @@ public class ArticleController extends BaseController {
     @RequestMapping("/lst")
     public String lst(QueryModel model){
         if (model.getQueryType() == AppConst.ESSAY_LIST_ADMIN) { // 查询管理员视图文章列表
-            String userid = getRequest().getAttribute("uid").toString();
             Integer role = (Integer) getRequest().getAttribute("role");
-            if (StringUtils.isBlank(userid) || role == null || role < AppConst.USER_ADMIN) {
-                return defaultResult();
+            if (role == null || role < AppConst.USER_ADMIN) {
+                return noPowerResult();
             }else {
                 return articleService.lst(model);
             }
@@ -35,8 +34,35 @@ public class ArticleController extends BaseController {
         return articleService.indexLst(model);
     }
 
+    // 根据用户id获取创建列表
+    @RequestMapping("/lstByAuthor")
+    public String lstByAuthor(QueryModel model){
+        if (model.getUser() == null || model.getUser().getId() == null) {
+            return defaultResult();
+        }
+        return articleService.lstByAuthorId(model, model.getUser().getId());
+    }
+
+    // 根据话题id获取下面文章
+    @RequestMapping("/lstByTopic")
+    public String lstByTopic(QueryModel model) {
+        if (model.getTopic() == null || model.getTopic().getId() == null) {
+            return defaultResult();
+        }
+        return articleService.lstByTopicId(model);
+    }
+
+    // 根据用户id查找收藏列表
+    @RequestMapping("/lstByLover")
+    public String lstByLover(QueryModel model) {
+        if (model.getUser() == null || model.getUser().getId() == null) {
+            return defaultResult();
+        }
+        return articleService.lstByLover(model);
+    }
+
     // 获取指定话题下相关文章
-    @RequestMapping("lstAbout")
+    @RequestMapping("/lstAbout")
     public String lstAbout(QueryModel model) {
         if (model.getTopic().getId() == null) {
             return defaultResult();
@@ -50,7 +76,8 @@ public class ArticleController extends BaseController {
         if (model.getArticle().getId() == null) {
             return defaultResult();
         }
-        return articleService.find(model);
+        String userId = getRequest().getAttribute("uid").toString();
+        return articleService.find(model, Long.parseLong(userId));
     }
 
     // 收藏文章

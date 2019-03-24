@@ -1,5 +1,6 @@
 package cn.bzeal.schoolblog.web;
 
+import cn.bzeal.schoolblog.common.AppConst;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.UserService;
 import org.apache.commons.lang3.StringUtils;
@@ -46,7 +47,12 @@ public class UserController extends BaseController {
 
     @RequestMapping("/lst")
     public String lst(QueryModel model) {
-        return userService.lst(model, getRequest());
+        Integer role = (Integer) getRequest().getAttribute("role");
+        if (role == null || role < AppConst.USER_ADMIN){
+            return noPowerResult();
+        }
+        String userId = getRequest().getAttribute("uid").toString();
+        return userService.lst(model, Long.parseLong(userId));
     }
 
     @RequestMapping("/delete")
