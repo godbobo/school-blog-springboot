@@ -2,7 +2,6 @@ package cn.bzeal.schoolblog.web.interceptor;
 
 import cn.bzeal.schoolblog.common.AppConst;
 import cn.bzeal.schoolblog.common.ResponseCode;
-import cn.bzeal.schoolblog.util.CommonUtil;
 import cn.bzeal.schoolblog.util.JwtTokenUtil;
 import cn.bzeal.schoolblog.util.ResponseUtil;
 import com.auth0.jwt.interfaces.Claim;
@@ -11,7 +10,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.util.Map;
 
 public class AuthTokenInterceptor implements HandlerInterceptor {

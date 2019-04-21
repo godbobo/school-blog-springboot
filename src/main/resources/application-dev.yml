@@ -1,0 +1,11 @@
+# 测试服务器
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/blog?serverTimezone=GMT%2B8
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+server:
+  port: 8081
+upload:
+  root: D:/Environment/nginx-1.15.9/html/static/upload/

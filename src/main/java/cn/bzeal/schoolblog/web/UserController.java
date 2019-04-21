@@ -5,8 +5,18 @@ import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/user")
@@ -17,6 +27,10 @@ public class UserController extends BaseController {
     // dao 负责与数据库交互
 
     private final UserService userService;
+
+
+
+
 
     @Autowired
     public UserController(UserService userService) {
@@ -89,4 +103,15 @@ public class UserController extends BaseController {
         }
         return userService.followOrNot(model, Long.parseLong(currentUserId));
     }
+
+    // 头像上传
+    @PostMapping("/avatarUpload")
+    public String avatarUpload(MultipartFile img, HttpServletRequest req) {
+        String id = getRequest().getAttribute("uid").toString();
+        if (img== null || img.isEmpty() || StringUtils.isBlank(id)){
+            return defaultResult();
+        }
+        return userService.uploadAvatar(img, req, Long.parseLong(id));
+    }
+
 }

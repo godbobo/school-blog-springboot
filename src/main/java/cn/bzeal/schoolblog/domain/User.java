@@ -17,28 +17,43 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // 登录名
 
     @Column(nullable = false)
-    private String password;
+    private String password; // 密码
 
     @Column(nullable = false)
     private Integer role = 0; // 0为学生，1为教师，2为管理员
 
     @Column(nullable = false)
-    private String name;
+    private String name; // 姓名
 
     @Column
-    private String college;
+    private String college; // 院系
 
     @Column(length = 11)
-    private String tel;
+    private String tel; // 电话
 
     @Column
     private String headimg; // 头像
 
     @Column(nullable = false)
     private Timestamp reg; // 注册日期
+
+    @Column
+    private Integer sex = 0; // 性别 0为未知，1为男，2为女
+
+    @Column
+    private String pro; // 专业
+
+    @Column
+    private String hobby; // 爱好
+
+    @Column
+    private String sign; // 个性签名
+
+    @Column
+    private String mail; // 邮箱
 
     // 一对多关系配置
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)

@@ -1,12 +1,16 @@
 package cn.bzeal.schoolblog.web.interceptor;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.config.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +18,9 @@ import java.util.List;
 @Configuration
 @Component
 public class InterceptorConfig extends WebMvcConfigurationSupport {
+
+    @Autowired
+    private HttpServletRequest request;
     /**
      * 发现如果继承了WebMvcConfigurationSupport，则在yml中配置的相关内容会失效。
      *
@@ -49,7 +56,6 @@ public class InterceptorConfig extends WebMvcConfigurationSupport {
         registry.addInterceptor(authTokenInterceptor()).addPathPatterns(urlPatterns);
         super.addInterceptors(registry);
     }
-
 
     //将拦截器作为bean写入配置中
     @Bean

@@ -37,6 +37,8 @@ public final class ResponseCode {
     public static final ResponseCode T_APP_SUCCESS_ADD = new ResponseCode("10", "添加成功");
     public static final ResponseCode T_APP_SUCCESS_DELETE = new ResponseCode("10", "删除成功");
     public static final ResponseCode T_APP_NO_POWER = new ResponseCode("1010010", "权限不足");
+    public static final ResponseCode T_APP_FAIL_UPLOAD = new ResponseCode("1010011", "上传失败");
+    public static final ResponseCode T_APP_SUCCESS_UPLOAD = new ResponseCode("10", "上传成功");
 
     // 文章模块
     public static final ResponseCode N_ESSAY_EMPTY_LIST = new ResponseCode("0020001", "列表为空");

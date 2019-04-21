@@ -68,7 +68,7 @@ public class ResponseUtil {
     }
 
     /**
-     * 转换json时对问藏的属性进行筛选
+     * 转换json时对文章的属性进行筛选
      */
     public static String revertArticleList(HashMap<String, Object> data) {
         JacksonUtil jacksonUtil = new JacksonUtil();
@@ -122,7 +122,7 @@ public class ResponseUtil {
     public static String revertUser(HashMap<String, Object> data) {
         JacksonUtil jacksonUtil = new JacksonUtil();
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg", "college", "tel", "reg", "role"));
+        filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg", "college", "tel", "reg", "role", "sex", "pro", "hobby", "sign", "mail"));
         return jacksonUtil.toJson(filterProvider, data);
     }
 

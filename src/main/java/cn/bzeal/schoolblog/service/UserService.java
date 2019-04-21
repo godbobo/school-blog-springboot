@@ -1,6 +1,7 @@
 package cn.bzeal.schoolblog.service;
 
 import cn.bzeal.schoolblog.model.QueryModel;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -29,5 +30,8 @@ public interface UserService {
 
     // 删除用户
     String deleteUser(Long userid);
+
+    // 上传头像
+    String uploadAvatar(MultipartFile file, HttpServletRequest req, Long userId);
 
 }

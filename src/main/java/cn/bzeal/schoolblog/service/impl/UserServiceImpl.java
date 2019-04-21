@@ -9,22 +9,31 @@ import cn.bzeal.schoolblog.service.UserService;
 import cn.bzeal.schoolblog.util.JwtTokenUtil;
 import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+
+    @Value("${upload.root}")
+    private String uploadRoot; // 上传文件根目录路径
+
+    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd");
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository) {
@@ -163,6 +172,36 @@ public class UserServiceImpl implements UserService {
     public String deleteUser(Long userid) {
         userRepository.deleteById(userid);
         return ResponseUtil.getResult(ResponseCode.T_APP_SUCCESS_DELETE);
+    }
+
+    @Override
+    public String uploadAvatar(MultipartFile file, HttpServletRequest req, Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.T_USER_EMPTY_FIND,null));
+        }
+        String realPath = uploadRoot + "avatar/";
+        String format = simpleDateFormat.format(new Date());
+        File folder = new File(realPath + format);
+        if (!folder.isDirectory()) {
+            folder.mkdirs();
+        }
+        String oldName = file.getOriginalFilename();
+        String newName = "/" + UUID.randomUUID().toString() + oldName.substring(oldName.lastIndexOf("."), oldName.length());
+        try {
+            file.transferTo(new File(folder, newName));
+
+            String filePath = req.getScheme() + "://" + req.getServerName() + "/upload/avatar/" + format + newName;
+            user.setHeadimg(filePath);
+            if (userRepository.save(user) != null) {
+                HashMap<String, Object> data = new HashMap<>();
+                data.put("url", filePath);
+                return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.T_APP_SUCCESS_UPLOAD, data));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.T_APP_FAIL_UPLOAD, null));
     }
 
 }
