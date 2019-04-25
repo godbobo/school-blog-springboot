@@ -39,4 +39,21 @@ public class CommentController extends BaseController {
         return commentService.lstById(model);
     }
 
+    /**
+     * 新增子评论
+     * @param model 模型对象
+     * comment.id 父级评论id
+     * comment.content 评论内容
+     * comment.creator 父级评论的创建者
+     */
+    @RequestMapping("addSubComment")
+    public String addSubComment(QueryModel model) {
+        String currentUserId = getRequest().getAttribute("uid").toString(); // 当前用户
+        Comment comment = model.getComment();
+        if (comment == null || comment.getId()==null || comment.getCreator() == null || StringUtils.isBlank(comment.getContent())){
+            return defaultResult();
+        }
+        return commentService.addSubComment(model, Long.parseLong(currentUserId));
+    }
+
 }

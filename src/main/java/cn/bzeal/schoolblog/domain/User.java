@@ -17,7 +17,10 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // 登录名
+    private Long id; // 索引
+
+    @Column(nullable = false,unique = true)
+    private String loginname; // 登录名
 
     @Column(nullable = false)
     private String password; // 密码
@@ -31,7 +34,7 @@ public class User {
     @Column
     private String college; // 院系
 
-    @Column(length = 11)
+    @Column
     private String tel; // 电话
 
     @Column

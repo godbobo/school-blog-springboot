@@ -114,7 +114,7 @@ public class ResponseUtil {
     public static String revertCommentList(HashMap<String, Object> data) {
         JacksonUtil jacksonUtil = new JacksonUtil();
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.addFilter("CommentFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "content", "upt", "creator"));
+        filterProvider.addFilter("CommentFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "content", "upt", "creator", "targetUser"));
         filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg"));
         return jacksonUtil.toJson(filterProvider, data);
     }

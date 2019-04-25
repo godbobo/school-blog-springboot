@@ -6,6 +6,8 @@ import cn.bzeal.schoolblog.domain.User;
 import cn.bzeal.schoolblog.domain.UserRepository;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.UserService;
+import cn.bzeal.schoolblog.util.CommonUtil;
+import cn.bzeal.schoolblog.util.ExcelUtil;
 import cn.bzeal.schoolblog.util.JwtTokenUtil;
 import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,23 +32,26 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
+    private final ExcelUtil excelUtil;
+
     @Value("${upload.root}")
     private String uploadRoot; // 上传文件根目录路径
 
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd");
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, ExcelUtil excelUtil) {
         this.userRepository = userRepository;
+        this.excelUtil = excelUtil;
     }
-
 
     @Override
     public String login(QueryModel model) {
-        User user = userRepository.findByIdAndPassword(model.getUser().getId(), model.getUser().getPassword());
+        User user = userRepository.findByLoginnameAndPassword(model.getUser().getLoginname(), CommonUtil.getHash(model.getUser().getPassword(), "MD5"));
         // 判断用户信息 有则生成 token 返回
         if (user != null) {
             try {
+                // 仅在登录时使用登录名，其他情况下依旧使用id来确定用户身份
                 String token = JwtTokenUtil.createToken(user.getId().toString(), user.getRole(), user.getName());
                 HashMap<String, Object> data = new HashMap<>();
                 data.put("token", token);
@@ -104,8 +109,7 @@ public class UserServiceImpl implements UserService {
         user.setTel(querys.get(2));
         user.setRole(Integer.parseInt(querys.get(3)));
         user.setReg(new Timestamp(System.currentTimeMillis()));
-        user.setPassword("admin");
-        // TODO 默认密码应该修改为其他密码
+        user.setPassword(CommonUtil.getHash("111111", "MD5"));
         if (userRepository.save(user) != null) {
             return ResponseUtil.getResult(ResponseCode.T_APP_SUCCESS_ADD);
         } else {
@@ -187,7 +191,7 @@ public class UserServiceImpl implements UserService {
             folder.mkdirs();
         }
         String oldName = file.getOriginalFilename();
-        String newName = "/" + UUID.randomUUID().toString() + oldName.substring(oldName.lastIndexOf("."), oldName.length());
+        String newName = "/" + UUID.randomUUID().toString() + oldName.substring(oldName.lastIndexOf("."));
         try {
             file.transferTo(new File(folder, newName));
 
@@ -202,6 +206,52 @@ public class UserServiceImpl implements UserService {
             e.printStackTrace();
         }
         return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.T_APP_FAIL_UPLOAD, null));
+    }
+
+    @Override
+    public String uploadExcel(MultipartFile excel, HttpServletRequest req) {
+        try {
+            Map<Integer, Map<String, Object>> map = excelUtil.getExcelContent(excel);
+            // 构建User对象
+            List<User> users = new ArrayList<>();
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+            String defaultPwd = CommonUtil.getHash("111111", "MD5"); // 默认密码，采用md5加密
+            for(Map<String, Object> u : map.values()){
+                User user = new User();
+                // 判断是否有必填字段
+                if(u.containsKey("loginname") && u.containsKey("role") && u.containsKey("name")) {
+                    user.setLoginname(String.valueOf(u.get("loginname")));
+                    Double d = Double.parseDouble(String.valueOf(u.get("role")));
+                    user.setRole(d.intValue());
+                    user.setName(String.valueOf(u.get("name")));
+                }else {
+                    return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.N_APP_NO_PARAMS,null));
+                }
+                // 插入默认值
+                user.setPassword(defaultPwd);
+                user.setReg(timestamp);
+                // 插入可选值
+                if (u.containsKey("headimg")) {
+                    user.setHeadimg(String.valueOf(u.get("headimg")));
+                }
+                if (u.containsKey("college")) {
+                    user.setCollege(String.valueOf(u.get("college")));
+                }
+                if (u.containsKey("email")){
+                    user.setMail(String.valueOf(u.get("email")));
+                }
+                if (u.containsKey("tel")){
+                    user.setTel(String.valueOf(u.get("tel")));
+                }
+                users.add(user);
+            }
+            if (userRepository.saveAll(users)!=null){
+                return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.T_SUCCESS,null));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.T_APP_FAIL_SAVE,null));
     }
 
 }

@@ -3,9 +3,11 @@ package cn.bzeal.schoolblog.service.impl;
 import cn.bzeal.schoolblog.common.AppConst;
 import cn.bzeal.schoolblog.common.ResponseCode;
 import cn.bzeal.schoolblog.domain.*;
+import cn.bzeal.schoolblog.model.CommentVo;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.CommentService;
 import cn.bzeal.schoolblog.util.ResponseUtil;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,7 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -79,28 +84,66 @@ public class CommentServiceImpl implements CommentService {
     public String lstById(QueryModel model) {
         Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
         HashMap<String, Object> data = new HashMap<>();
+        Page<Comment> page = null;
         if (model.getQueryType() == AppConst.COMMENT_LST_ESSAY) {
             Article article = articleRepository.findById(model.getArticle().getId()).orElse(null);
             if (article != null) {
-                Page<Comment> page = commentRepository.findByArticle(article, pageable);
-                data.put("commentlst", page.getContent());
-                data.put("total", page.getTotalElements());
-                return ResponseUtil.revertCommentList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
+                page = commentRepository.findByArticle(article, pageable);
             }
         } else if (model.getQueryType() == AppConst.COMMENT_LST_TOPIC) {
             Topic topic = topicRepository.findById(model.getTopic().getId()).orElse(null);
             if (topic != null) {
-                Page<Comment> page = commentRepository.findByTopic(topic, pageable);
-                data.put("commentlst", page.getContent());
-                data.put("total", page.getTotalElements());
-                return ResponseUtil.revertCommentList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
+                page = commentRepository.findByTopic(topic, pageable);
             }
+        }
+        // 处理结果
+        if (page != null) {
+            List<Map<String, Object>> commentList = new ArrayList<>();
+            for(Comment c : page.getContent()){
+                // 第一层循环，获取直属评论列表
+                Map<String, Object> d = new HashMap<>();
+                d.put("id", c.getId());
+                d.put("content", c.getContent());
+                d.put("upt", c.getUpt());
+                d.put("creator", c.getCreator());
+                // 读取子评论下的所有评论
+                List<CommentVo> subCommentList = new ArrayList<>();
+                loopComment(subCommentList, c.getChilds());
+                d.put("childs", subCommentList);
+                commentList.add(d);
+            }
+            data.put("commentlst", commentList);
+            data.put("total", page.getTotalElements());
+            return ResponseUtil.revertCommentList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
         }
         return ResponseUtil.getResult(ResponseCode.N_SUCCESS);
     }
 
+    @Override
+    public String addSubComment(QueryModel model, Long currentUserId) {
+        // 找到父级评论的创建者
+        User pUser = userRepository.findById(model.getComment().getCreator().getId()).orElse(null);
+        // 找到父级评论
+        Comment pComment = commentRepository.findById(model.getComment().getId()).orElse(null);
+        // 找到当前用户
+        User user = userRepository.findById(currentUserId).orElse(null);
+        if (pUser != null && pComment != null && user!= null){
+            Comment comment = new Comment();
+            comment.setCreator(user);
+            comment.setPComment(pComment);
+            comment.setType(AppConst.COMMENT_ADD_COMMENT);
+            comment.setContent(model.getComment().getContent());
+            comment.setUpt(new Timestamp(System.currentTimeMillis()));
+            if (commentRepository.save(comment) != null) {
+                sendMessage(user, pUser, AppConst.COMMENT_ADD_COMMENT);
+                return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS,null));
+            }
+        }
+        return ResponseUtil.getResult(ResponseCode.T_APP_FAIL_SAVE);
+    }
+
     // 发送消息
-    private void sendMessage(User creator, User target, int type, String title) {
+    private void sendMessage(User creator, User target, int type, String ...title) {
         Message message = new Message();
         message.setCreator(creator);
         message.setTarget(target);
@@ -110,8 +153,23 @@ public class CommentServiceImpl implements CommentService {
             message.setContent(creator.getName() + " 评论了你的文章:《" + title + "》");
         } else if (type == AppConst.COMMENT_ADD_TOPIC) {
             message.setContent(creator.getName() + " 评论了你的话题:《" + title + "》");
+        } else if (type == AppConst.COMMENT_ADD_COMMENT) {
+            message.setContent(creator.getName() + "回复了你");
         }
         messageRepository.save(message);
+    }
+
+    // 遍历树结构评论
+    private void loopComment(List<CommentVo> res, List<Comment> list) {
+        for(Comment c : list) {
+            CommentVo vo = new CommentVo();
+            BeanUtils.copyProperties(c, vo);
+            vo.setTargetUser(c.getPComment().getCreator());
+            res.add(vo);
+            if (c.getChilds().size()>0){
+                loopComment(res, c.getChilds());
+            }
+        }
     }
 
 }

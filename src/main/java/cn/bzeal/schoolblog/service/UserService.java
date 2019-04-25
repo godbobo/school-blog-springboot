@@ -34,4 +34,7 @@ public interface UserService {
     // 上传头像
     String uploadAvatar(MultipartFile file, HttpServletRequest req, Long userId);
 
+    // 上传表格
+    String uploadExcel(MultipartFile excel, HttpServletRequest req);
+
 }

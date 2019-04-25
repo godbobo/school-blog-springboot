@@ -39,7 +39,7 @@ public class UserController extends BaseController {
 
     @RequestMapping("/login")
     public String login(QueryModel model) {
-        if (model.getUser() == null || model.getUser().getId() == null || StringUtils.isBlank(model.getUser().getPassword())) {
+        if (model.getUser() == null || StringUtils.isAnyBlank(model.getUser().getPassword(), model.getUser().getLoginname())) {
             return defaultResult();
         }
         return userService.login(model);
@@ -112,6 +112,15 @@ public class UserController extends BaseController {
             return defaultResult();
         }
         return userService.uploadAvatar(img, req, Long.parseLong(id));
+    }
+
+    // 用户excel文件上传
+    @PostMapping("/excelUpload")
+    public String excelUpload(MultipartFile excel, HttpServletRequest req) {
+        if (excel == null|| excel.isEmpty()) {
+            return  defaultResult();
+        }
+        return userService.uploadExcel(excel, req);
     }
 
 }

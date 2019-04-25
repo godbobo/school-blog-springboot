@@ -192,7 +192,8 @@ public class ArticleServiceImpl implements ArticleService {
     public String add(QueryModel model, Long userid, Long topicid) {
         User user = userRepository.findById(userid).orElse(null);
         if (user != null) {
-            Article article = model.getArticle();
+            Article article = new Article();
+            BeanUtils.copyProperties(model.getArticle(), article);
             article.setAuthor(user);
             article.setUpt(new Timestamp(System.currentTimeMillis()));
             topicRepository.findById(topicid).ifPresent(article::setTopic);

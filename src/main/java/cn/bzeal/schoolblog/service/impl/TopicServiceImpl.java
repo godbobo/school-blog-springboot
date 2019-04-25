@@ -43,7 +43,8 @@ public class TopicServiceImpl implements TopicService {
     public String add(QueryModel model, Long userid) {
         User user = userRepository.findById(userid).orElse(null);
         if (user != null) {
-            Topic topic = model.getTopic();
+            Topic topic = new Topic();
+            BeanUtils.copyProperties(model.getTopic(), topic);
             topic.setCreator(user);
             List<Tag> tagList;
             // 尝试获取标签列表

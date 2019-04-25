@@ -9,7 +9,7 @@ import java.util.List;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     // 根据用户名和密码查询用户
-    User findByIdAndPassword(Long id, String password);
+    User findByLoginnameAndPassword(String loginname, String password);
 
     // 根据id查询用户列表
     List<User> findByIdIn(List<Long> ids);
