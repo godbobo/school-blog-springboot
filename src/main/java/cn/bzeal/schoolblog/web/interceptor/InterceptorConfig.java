@@ -51,8 +51,7 @@ public class InterceptorConfig extends WebMvcConfigurationSupport {
         urlPatterns.add("/topic/*");
         urlPatterns.add("/comment/*");
         urlPatterns.add("/message/*");
-        // TODO 每次新增加 model 时在这里将其路径加入，否则过滤器不会生效
-
+        urlPatterns.add("/file/*");
         registry.addInterceptor(authTokenInterceptor()).addPathPatterns(urlPatterns);
         super.addInterceptors(registry);
     }

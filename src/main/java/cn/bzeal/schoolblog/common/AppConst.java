@@ -61,4 +61,10 @@ public class AppConst {
     public static final int MESSAGE_LIST_READ = 0; // 已读消息列表
     public static final int MESSAGE_LIST_UNREAD = 1; // 未读消息列表
 
+    /**
+     * 文件相关
+     */
+    public static final int FILE_TYPE_ARTICLE = 0; // 文章
+    public static final int FILE_TYPE_TOPIC = 1; // 话题
+
 }

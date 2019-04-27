@@ -54,6 +54,10 @@ public class Article {
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL)
     private List<Comment> comments;
 
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "article")
+    private List<Resource> files; // 文件列表
+
     // 多对多配置
     @ManyToMany
     @JoinTable(name = "article_tag", joinColumns = @JoinColumn(name = "article_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))

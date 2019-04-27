@@ -36,6 +36,10 @@ public class Topic {
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL)
     private List<Comment> comments; // 评论列表
 
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "topic")
+    private List<Resource> files; // 文件列表
+
     // 多对一配置
     @ManyToOne(optional = false)
     @JoinColumn(name = "creator")

@@ -62,8 +62,9 @@ public class ResponseUtil {
     public static String revertTopic(HashMap<String, Object> data) {
         JacksonUtil jacksonUtil = new JacksonUtil();
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.addFilter("TopicFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "summary", "upt", "creator"));
+        filterProvider.addFilter("TopicFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "summary", "upt", "creator", "files"));
         filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg"));
+        filterProvider.addFilter("ResourceFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "url", "size"));
         return jacksonUtil.toJson(filterProvider, data);
     }
 
@@ -73,7 +74,7 @@ public class ResponseUtil {
     public static String revertArticleList(HashMap<String, Object> data) {
         JacksonUtil jacksonUtil = new JacksonUtil();
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.addFilter("ArticleFilter", SimpleBeanPropertyFilter.serializeAllExcept("comments"));
+        filterProvider.addFilter("ArticleFilter", SimpleBeanPropertyFilter.serializeAllExcept("comments", "files"));
         filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg"));
         filterProvider.addFilter("TopicFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name"));
         filterProvider.addFilter("TagFilter", SimpleBeanPropertyFilter.serializeAllExcept("creator", "articles", "topics"));
@@ -88,6 +89,7 @@ public class ResponseUtil {
         filterProvider.addFilter("TagFilter", SimpleBeanPropertyFilter.serializeAllExcept("creator", "articles", "topics"));
         filterProvider.addFilter("TopicFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name"));
         filterProvider.addFilter("CommentFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "content", "upt", "creator"));
+        filterProvider.addFilter("ResourceFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "url", "size"));
         return jacksonUtil.toJson(filterProvider, data);
     }
 
@@ -104,7 +106,7 @@ public class ResponseUtil {
     public static String revertTopicList(HashMap<String, Object> data) {
         JacksonUtil jacksonUtil = new JacksonUtil();
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.addFilter("TopicFilter", SimpleBeanPropertyFilter.serializeAllExcept("comments"));
+        filterProvider.addFilter("TopicFilter", SimpleBeanPropertyFilter.serializeAllExcept("comments", "files"));
         filterProvider.addFilter("TagFilter", SimpleBeanPropertyFilter.serializeAllExcept("creator", "articles", "topics"));
         filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg"));
         filterProvider.addFilter("ArticleFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id"));
