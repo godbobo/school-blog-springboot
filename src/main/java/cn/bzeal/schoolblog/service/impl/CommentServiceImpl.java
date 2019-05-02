@@ -6,7 +6,10 @@ import cn.bzeal.schoolblog.domain.*;
 import cn.bzeal.schoolblog.model.CommentVo;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.CommentService;
+import cn.bzeal.schoolblog.util.MessagePushService;
 import cn.bzeal.schoolblog.util.ResponseUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,22 +31,23 @@ import java.util.Map;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
-
     private final UserRepository userRepository;
-
     private final ArticleRepository articleRepository;
-
     private final TopicRepository topicRepository;
-
     private final MessageRepository messageRepository;
+    private final MessagePushService pushService;
+    private final Logger logger = LoggerFactory.getLogger(CommentServiceImpl.class);
 
     @Autowired
-    public CommentServiceImpl(CommentRepository commentRepository, UserRepository userRepository, ArticleRepository articleRepository, TopicRepository topicRepository, MessageRepository messageRepository) {
+    public CommentServiceImpl(CommentRepository commentRepository, UserRepository userRepository,
+                              ArticleRepository articleRepository, TopicRepository topicRepository,
+                              MessageRepository messageRepository, MessagePushService pushService) {
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
         this.articleRepository = articleRepository;
         this.topicRepository = topicRepository;
         this.messageRepository = messageRepository;
+        this.pushService = pushService;
     }
 
 
@@ -67,10 +72,10 @@ public class CommentServiceImpl implements CommentService {
                 User targetUser;
                 if (article != null) {
                     targetUser = article.getAuthor();
-                    sendMessage(currentUser, targetUser, cmt.getType(), article.getTitle());
+                    sendMessage(currentUser, targetUser, cmt.getType(), article, null);
                 } else if (topic != null) {
                     targetUser = topic.getCreator();
-                    sendMessage(currentUser, targetUser, cmt.getType(), topic.getName());
+                    sendMessage(currentUser, targetUser, cmt.getType(), null, topic);
                 }
                 return ResponseUtil.getResult(ResponseCode.T_COMMENT_SUCCESS_ADD);
             } else {
@@ -135,7 +140,13 @@ public class CommentServiceImpl implements CommentService {
             comment.setContent(model.getComment().getContent());
             comment.setUpt(new Timestamp(System.currentTimeMillis()));
             if (commentRepository.save(comment) != null) {
-                sendMessage(user, pUser, AppConst.COMMENT_ADD_COMMENT);
+                if (model.getTopic()!= null) {
+                    Topic topic = topicRepository.findById(model.getTopic().getId()).orElse(null);
+                    sendMessage(user, pUser, AppConst.COMMENT_ADD_COMMENT, null, topic);
+                }else {
+                    Article article = articleRepository.findById(model.getArticle().getId()).orElse(null);
+                    sendMessage(user, pUser, AppConst.COMMENT_ADD_COMMENT, article, null);
+                }
                 return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS,null));
             }
         }
@@ -143,20 +154,37 @@ public class CommentServiceImpl implements CommentService {
     }
 
     // 发送消息
-    private void sendMessage(User creator, User target, int type, String ...title) {
+    private void sendMessage(User creator, User target, int type, Article article, Topic topic) {
         Message message = new Message();
         message.setCreator(creator);
         message.setTarget(target);
         message.setType(AppConst.MESSAGE_TYPE_SYSTEM);
         message.setUpt(new Timestamp(System.currentTimeMillis()));
         if (type == AppConst.COMMENT_ADD_ESSAY) {
-            message.setContent(creator.getName() + " 评论了你的文章:《" + title + "》");
+            message.setContent(" 评论了你的文章:《<a style=\"color:rgb(64, 158, 255)\" href=\"/#/browser/essay/detail/" + article.getId() + "\">" + article.getTitle() + "</a>》");
         } else if (type == AppConst.COMMENT_ADD_TOPIC) {
-            message.setContent(creator.getName() + " 评论了你的话题:《" + title + "》");
+            message.setContent(" 评论了你的话题:《<a style=\"color:rgb(64, 158, 255)\" href=\"/#/browser/topic/detail/" + topic.getId() + "\">" + topic.getName() + "</a>》");
         } else if (type == AppConst.COMMENT_ADD_COMMENT) {
-            message.setContent(creator.getName() + "回复了你");
+            String link = "";
+            if (article != null) {
+                link = "<a style=\"color:rgb(64, 158, 255)\" href=\"/#/browser/topic/detail/" + article.getId() + "\">" + article.getTitle() + "</a>》";
+            }else if (topic!= null) {
+                link =  "<a style=\"color:rgb(64, 158, 255)\" href=\"/#/browser/topic/detail/" + topic.getId() + "\">" + topic.getName() + "</a>";
+            }
+            message.setContent("回复了你在" + link + "下的评论");
         }
-        messageRepository.save(message);
+        Message msg = messageRepository.save(message);
+        if (msg!=null) {
+            HashMap<String,Object> data = new HashMap<>();
+            data.put("msg", msg);
+            String res = ResponseUtil.revertMessageList(ResponseUtil.getResultMap(ResponseCode.T_MESSAGE_SUCCESS_SEND, data));
+            try {
+                this.pushService.sendMsg(res, target.getId());
+            } catch (IOException e) {
+                this.logger.error("发送socket消息失败");
+                e.printStackTrace();
+            }
+        }
     }
 
     // 遍历树结构评论

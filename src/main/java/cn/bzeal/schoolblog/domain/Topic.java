@@ -31,7 +31,7 @@ public class Topic {
 
     // 一对多配置
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL)
-    private List<Article> articles; // 话题列表
+    private List<Article> articles; // 文章列表
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL)
     private List<Comment> comments; // 评论列表

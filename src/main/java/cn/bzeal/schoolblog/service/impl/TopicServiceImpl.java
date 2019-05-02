@@ -104,6 +104,18 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
+    public String follow(Long topicId, Long userId) {
+        Topic topic = topicRepository.findById(topicId).orElse(null);
+        User user = userRepository.findById(userId).orElse(null);
+        if (topic != null && user != null) {
+            topic.getFollowers().add(user);
+            topicRepository.save(topic);
+            return ResponseUtil.getResult(ResponseCode.N_SUCCESS);
+        }
+        return ResponseUtil.getResult(ResponseCode.T_APP_FAIL_UPDATE);
+    }
+
+    @Override
     public String lstByFollower(QueryModel model) {
         User user = userRepository.findById(model.getUser().getId()).orElse(null);
         if (user != null) {
@@ -159,11 +171,20 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public String find(Long topicId) {
+    public String find(Long topicId, Long userId) {
         Topic topic = topicRepository.findById(topicId).orElse(null);
         if (topic != null) {
+            Qtopic qtopic = new Qtopic();
+            BeanUtils.copyProperties(topic, qtopic);
+            // 如果在关注列表中找到该用户，则该话题已被该用户关注
+            for (User user : topic.getFollowers()){
+                if (user.getId().equals(userId)){
+                    qtopic.setIsfollow(true);
+                    break;
+                }
+            }
             HashMap<String, Object> data = new HashMap<>();
-            data.put("topic", topic);
+            data.put("topic", qtopic);
             return ResponseUtil.revertTopic(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
         }
         return ResponseUtil.getResult(ResponseCode.T_TOPIC_EMPTY_FIND);

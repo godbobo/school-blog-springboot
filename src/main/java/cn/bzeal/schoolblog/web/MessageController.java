@@ -21,12 +21,22 @@ public class MessageController extends BaseController {
     // 发送消息
     @RequestMapping("/send")
     public String send(QueryModel model) {
-        if (model.getUser() == null || model.getUser().getId() == null || model.getMessage() == null || model.getMessage().getContent() ==null) {
+        if (model.getUser() == null || model.getUser().getId() == null || model.getMessage() == null || model.getMessage().getContent() == null) {
             return defaultResult();
         }
         String userId = getRequest().getAttribute("uid").toString();
         return messageService.send(model, Long.parseLong(userId));
-}
+    }
+
+    // 删除消息
+    @RequestMapping("/delete")
+    public String delete(QueryModel model) {
+        String userId = getRequest().getAttribute("uid").toString();
+        if (model.getUser() == null || model.getUser().getId() == null ) {
+            return defaultResult();
+        }
+        return messageService.delete(model.getUser().getId(), Long.parseLong(userId));
+    }
 
     // 消息列表
     @RequestMapping("/lst")

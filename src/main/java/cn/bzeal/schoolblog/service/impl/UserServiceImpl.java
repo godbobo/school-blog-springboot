@@ -137,7 +137,7 @@ public class UserServiceImpl implements UserService {
             }
             userRepository.save(currentUser);
             userRepository.save(targetUser);
-            return ResponseUtil.getResult(ResponseCode.T_USER_SUCCESS_FOLLOW);
+            return ResponseUtil.getResult(ResponseCode.N_SUCCESS);
         }
         return ResponseUtil.getResult(ResponseCode.T_USER_EMPTY_FIND);
     }

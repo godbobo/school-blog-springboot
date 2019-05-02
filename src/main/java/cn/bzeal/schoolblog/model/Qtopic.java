@@ -10,5 +10,6 @@ public class Qtopic extends Topic {
 
     private Integer usercount = 1; // 用户数量（包含创建者和加入者）
     private Integer essaycount = 0; // 文章数量
+    private boolean isfollow = false; // 是否已加入话题
 
 }

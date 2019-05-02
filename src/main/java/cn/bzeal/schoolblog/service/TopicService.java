@@ -13,6 +13,9 @@ public interface TopicService {
     // 根据创建者获取话题列表
     String lstByCreator(QueryModel model);
 
+    // 加入话题
+    String follow(Long topicId, Long userId);
+
     // 根据用户id获取加入的话题列表
     String lstByFollower(QueryModel model);
 
@@ -23,6 +26,6 @@ public interface TopicService {
     String lstAboutId(Long userid);
 
     // 根据id查询话题
-    String find(Long topicId);
+    String find(Long topicId, Long userId);
 
 }

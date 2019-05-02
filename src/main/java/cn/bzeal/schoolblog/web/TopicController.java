@@ -58,7 +58,8 @@ public class TopicController extends BaseController {
         if (model.getTopic() == null || model.getTopic().getId() == null) {
             return defaultResult();
         }
-        return topicService.find(model.getTopic().getId());
+        String userId = getRequest().getAttribute("uid").toString();
+        return topicService.find(model.getTopic().getId(), Long.parseLong(userId));
     }
 
     // 用户相关话题（创建、加入）
@@ -84,5 +85,15 @@ public class TopicController extends BaseController {
     @RequestMapping("/lst")
     public String lst(QueryModel model) {
         return topicService.lst(model);
+    }
+
+    // 加入话题
+    @RequestMapping("/follow")
+    public String follow(QueryModel model){
+        String userId = getRequest().getAttribute("uid").toString();
+        if (model.getTopic() == null || model.getTopic().getId() == null) {
+            return defaultResult();
+        }
+        return topicService.follow(model.getTopic().getId(), Long.parseLong(userId));
     }
 }

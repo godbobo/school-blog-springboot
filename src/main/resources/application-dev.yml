@@ -5,6 +5,8 @@ spring:
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    show-sql: true
 server:
   port: 8081
 upload:

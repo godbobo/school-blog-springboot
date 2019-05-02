@@ -62,7 +62,7 @@ public class ResponseUtil {
     public static String revertTopic(HashMap<String, Object> data) {
         JacksonUtil jacksonUtil = new JacksonUtil();
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.addFilter("TopicFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "summary", "upt", "creator", "files"));
+        filterProvider.addFilter("TopicFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "summary", "upt", "creator", "files", "isfollow"));
         filterProvider.addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "headimg"));
         filterProvider.addFilter("ResourceFilter", SimpleBeanPropertyFilter.filterOutAllExcept("id", "name", "url", "size"));
         return jacksonUtil.toJson(filterProvider, data);
