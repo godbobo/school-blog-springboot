@@ -24,4 +24,9 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     // 根据话题查找文章列表
     Page<Article> findByTopic(Topic topic, Pageable pageable);
 
+    // 根据标题查找文章列表
+    Page<Article> findByTitleLike(String title, Pageable pageable);
+    // 根据内容查找文章列表
+    Page<Article> findByContentLike(String content, Pageable pageable);
+
 }

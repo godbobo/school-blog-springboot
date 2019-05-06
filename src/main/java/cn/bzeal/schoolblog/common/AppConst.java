@@ -37,6 +37,13 @@ public class AppConst {
     public static final int QUERY_USERLIST_USERNAME = 1; // 根据用户 id 进行查询
     public static final int QUERY_USERLIST_Q = 2; // 根据关键字查询
 
+    /**
+     * 查询文章、话题列表
+     */
+    public static final int QUERY_ESSAY_ALL = 0; // 查询全部
+    public static final int QUERY_ESSAY_LOGIN_NAME = 1; // 登录名
+    public static final int QUERY_ESSAY_KEYWORDS = 2; // 关键字
+
     public static final int USER_FOLLOW = 0; // 关注用户
     public static final int USER_FOLLOW_CANCEL = 1; // 取消关注用户
 

@@ -1,8 +1,10 @@
 package cn.bzeal.schoolblog.web;
 
 import cn.bzeal.schoolblog.common.AppConst;
+import cn.bzeal.schoolblog.common.ResponseCode;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.ArticleService;
+import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -100,6 +102,8 @@ public class ArticleController extends BaseController {
         String userid = getRequest().getAttribute("uid").toString();
         if(StringUtils.isAnyBlank(title, summary, content, userid)){
             return defaultResult();
+        }else if (summary.length()>250){
+            return ResponseUtil.getResult(ResponseCode.T_ESSAY_EXCEED_LENGTH);
         }
         Long topicid = model.getTopic().getId();
         return articleService.add(model, Long.parseLong(userid), topicid);

@@ -29,7 +29,7 @@ public class User {
     private Integer role = 0; // 0为学生，1为教师，2为管理员
 
     @Column(nullable = false)
-    private String name; // 姓名
+    private String realName; // 姓名
 
     @Column
     private String college; // 院系

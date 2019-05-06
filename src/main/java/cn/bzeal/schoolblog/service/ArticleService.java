@@ -27,5 +27,4 @@ public interface ArticleService {
     String updateRelation(QueryModel model);
 
     String likOrNot(Long articleId, Long currentUserId);
-
 }

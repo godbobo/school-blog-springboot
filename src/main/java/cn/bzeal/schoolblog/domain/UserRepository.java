@@ -11,13 +11,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 根据用户名和密码查询用户
     User findByLoginnameAndPassword(String loginname, String password);
 
+    // 根据登录名查询用户
+    User findByLoginname(String loginname);
+
     // 根据id查询用户列表
     List<User> findByIdIn(List<Long> ids);
 
     // 查询用户列表
     Page<User> findAllByIdNot(Long id, Pageable pageable);
 
-    // 按条件查询用户列表
-    Page<User> findAllByNameLikeAndCollegeLike(String name, String college, Pageable pageable);
+    // 模糊查询用户姓名
+    Page<User> findByRealNameLike(String realName, Pageable pageable);
+
+    // 模糊查询用户院系
+    Page<User> findByCollegeLike(String college, Pageable pageable);
 
 }

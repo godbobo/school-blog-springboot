@@ -1,22 +1,20 @@
 package cn.bzeal.schoolblog.web;
 
 import cn.bzeal.schoolblog.common.AppConst;
+import cn.bzeal.schoolblog.common.ResponseCode;
+import cn.bzeal.schoolblog.domain.User;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.UserService;
+import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/user")
@@ -43,10 +41,22 @@ public class UserController extends BaseController {
 
     @RequestMapping("/add")
     public String add(QueryModel model) {
-        if (model.getQueryList() == null || model.getQueryList().size() == 0) {
-            return defaultResult();
+        // 验证登录用户是否为管理员
+        Integer role = (Integer) getRequest().getAttribute("role");
+        User user = model.getUser();
+        if (role != null && role >= AppConst.USER_TEACHER) { // 只有教师和管理员有权增加用户
+            if (user != null && !StringUtils.isAnyBlank(user.getRealName(), user.getCollege(), user.getLoginname()) && user.getRole() != null) {
+                // 教师只能增加学生用户
+                if (role == AppConst.USER_TEACHER && user.getRole() >= role) {
+                    return ResponseUtil.getResult(ResponseCode.T_APP_NO_POWER);
+                }
+                return userService.insertUser(model);
+            } else {
+                return defaultResult();
+            }
         }
-        return userService.insertUser(model);
+        return ResponseUtil.getResult(ResponseCode.T_APP_NO_POWER);
+
     }
 
     @RequestMapping("/getInfo")
@@ -58,7 +68,7 @@ public class UserController extends BaseController {
     @RequestMapping("/lst")
     public String lst(QueryModel model) {
         Integer role = (Integer) getRequest().getAttribute("role");
-        if (role == null || role < AppConst.USER_ADMIN){
+        if (role == null || role == AppConst.USER_STU) { // 不允许学生访问
             return noPowerResult();
         }
         String userId = getRequest().getAttribute("uid").toString();
@@ -74,10 +84,24 @@ public class UserController extends BaseController {
         if (model.getUser() != null) {
             deleteid = model.getUser().getId();
         }
+        if (StringUtils.isBlank(id)) {
+            return defaultResult();
+        } else if (role == null || role == AppConst.USER_STU) {
+            return noPowerResult();
+        }
+        return userService.deleteUser(deleteid, role);
+    }
+
+    // 批量删除用户
+    @RequestMapping("/batchDelete")
+    public String batchDelete(QueryModel model) {
+        // 验证登录用户身份
+        String id = getRequest().getAttribute("uid").toString();
+        Integer role = (Integer) getRequest().getAttribute("role");
         if (StringUtils.isBlank(id) || role == null || role != 2) {
             return defaultResult();
         }
-        return userService.deleteUser(deleteid);
+        return userService.batchDelete(model.getQueryList(), role);
     }
 
     // 统计用户信息
@@ -104,7 +128,7 @@ public class UserController extends BaseController {
     @PostMapping("/avatarUpload")
     public String avatarUpload(MultipartFile img, HttpServletRequest req) {
         String id = getRequest().getAttribute("uid").toString();
-        if (img== null || img.isEmpty() || StringUtils.isBlank(id)){
+        if (img == null || img.isEmpty() || StringUtils.isBlank(id)) {
             return defaultResult();
         }
         return userService.uploadAvatar(img, req, Long.parseLong(id));
@@ -113,10 +137,34 @@ public class UserController extends BaseController {
     // 用户excel文件上传
     @PostMapping("/excelUpload")
     public String excelUpload(MultipartFile excel, HttpServletRequest req) {
-        if (excel == null|| excel.isEmpty()) {
-            return  defaultResult();
+        if (excel == null || excel.isEmpty()) {
+            return defaultResult();
         }
-        return userService.uploadExcel(excel, req);
+        Integer role = (Integer) getRequest().getAttribute("role");
+        if (role == null || role < AppConst.USER_TEACHER) { // 只有教师和管理员有权增加用户
+            return ResponseUtil.getResult(ResponseCode.T_APP_NO_POWER);
+        }
+        return userService.uploadExcel(excel, req, role);
+    }
+
+    // 修改用户密码
+    @RequestMapping("/changePwd")
+    public String changePwd(@Param("oldPwd") String oldPwd, @Param("newPwd") String newPwd) {
+        String currentUserId = getRequest().getAttribute("uid").toString();
+        if (StringUtils.isAnyBlank(oldPwd, newPwd)) {
+            return defaultResult();
+        }
+        return userService.changePwd(oldPwd, newPwd, Long.parseLong(currentUserId));
+    }
+
+    // 重置用户密码
+    @RequestMapping("/resetPwd")
+    public String resetPwd(QueryModel model) {
+        Integer role = (Integer) getRequest().getAttribute("role");
+        if (role == null || role == 0 || model.getUser() == null || model.getUser().getId() == null) {
+            return defaultResult();
+        }
+        return userService.resetPwd(model.getUser().getId(), role);
     }
 
 }

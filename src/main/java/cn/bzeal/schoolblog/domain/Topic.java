@@ -30,7 +30,7 @@ public class Topic {
     private Timestamp upt; // 创建时间
 
     // 一对多配置
-    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "topic", cascade = CascadeType.PERSIST)
     private List<Article> articles; // 文章列表
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL)

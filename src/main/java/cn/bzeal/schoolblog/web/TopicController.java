@@ -1,7 +1,9 @@
 package cn.bzeal.schoolblog.web;
 
+import cn.bzeal.schoolblog.common.ResponseCode;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.TopicService;
+import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,13 +24,14 @@ public class TopicController extends BaseController {
     @RequestMapping("/add")
     public String add(QueryModel model) {
         String userid = getRequest().getAttribute("uid").toString();
-        // TODO 在这里判断角色在不增加角色变更功能的时候没有问题，如有增加则需要注意角色信息过期问题
         Integer role = (Integer) getRequest().getAttribute("role");
         String name = model.getTopic().getName();
         String summary = model.getTopic().getSummary();
         // 必须有前三个参数且角色必须是教师以上
-        if (StringUtils.isAnyBlank(userid, name, summary) || role == null || role < 1) {
+        if (StringUtils.isAnyBlank(userid, name, summary)) {
             return defaultResult();
+        }else if( role == null || role < 1){
+            return ResponseUtil.getResult(ResponseCode.T_TOPIC_NO_POWER);
         }
         return topicService.add(model, Long.parseLong(userid));
     }
@@ -96,4 +99,5 @@ public class TopicController extends BaseController {
         }
         return topicService.follow(model.getTopic().getId(), Long.parseLong(userId));
     }
+
 }

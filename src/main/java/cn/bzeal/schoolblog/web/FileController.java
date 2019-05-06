@@ -1,11 +1,11 @@
 package cn.bzeal.schoolblog.web;
 
 import cn.bzeal.schoolblog.common.AppConst;
+import cn.bzeal.schoolblog.common.ResponseCode;
 import cn.bzeal.schoolblog.model.QueryModel;
 import cn.bzeal.schoolblog.service.FileService;
+import cn.bzeal.schoolblog.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,7 +30,7 @@ public class FileController extends BaseController {
     @RequestMapping("/upload")
     public String upload(MultipartFile file, Integer queryType, Long id, HttpServletRequest request){
         if (queryType == null || id == null || file == null) {
-            return  defaultResult();
+            return defaultResult();
         }
         return fileService.upload(queryType, id, file, request);
     }
@@ -45,7 +45,7 @@ public class FileController extends BaseController {
             id = model.getTopic().getId();
         }
         if (id == null || model.getFile() == null || model.getFile().getId() == null) {
-            return  defaultResult();
+            return ResponseUtil.getResult(ResponseCode.T_APP_FAIL_DELETE);
         }
         return fileService.remove(model.getQueryType(), id, model.getFile().getId());
     }

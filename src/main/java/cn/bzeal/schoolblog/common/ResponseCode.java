@@ -45,6 +45,7 @@ public final class ResponseCode {
     public static final ResponseCode T_ESSAY_EMPTY_FIND = new ResponseCode("1020002", "未找到指定文章");
     public static final ResponseCode T_ESSAY_FAIL_LIKE = new ResponseCode("1020003", "收藏失败");
     public static final ResponseCode T_ESSAY_NO_AUTHOR = new ResponseCode("1020004", "未查找到作者信息");
+    public static final ResponseCode T_ESSAY_EXCEED_LENGTH = new ResponseCode("1020005", "简介最大长度为 250 字符");
 
     // 用户模块
     public static final ResponseCode T_USER_EMPTY_FIND = new ResponseCode("1030001", "未找到指定用户");
@@ -52,10 +53,12 @@ public final class ResponseCode {
     public static final ResponseCode T_USER_FAIL_LOGIN = new ResponseCode("1030003", "登录失败");
     public static final ResponseCode T_USER_CONFLICT_FOLLOW = new ResponseCode("1030004", "无法关注自己");
     public static final ResponseCode T_USER_SUCCESS_FOLLOW = new ResponseCode("10", "关注成功");
+    public static final ResponseCode T_USER_FAIL_PWD_INVALID = new ResponseCode("1030005", "旧密码不正确");
 
     // 话题模块
     public static final ResponseCode N_TOPIC_EMPTY_FIND = new ResponseCode("0040001", "未找到指定话题");
     public static final ResponseCode T_TOPIC_EMPTY_FIND = new ResponseCode("1040001", "未找到指定话题");
+    public static final ResponseCode T_TOPIC_NO_POWER = new ResponseCode("1040002", "您没有创建话题的权限");
 
     // 评论模块
     public static final ResponseCode T_COMMENT_NO_AUTHOR = new ResponseCode("1050001", "未查找到创建者信息");

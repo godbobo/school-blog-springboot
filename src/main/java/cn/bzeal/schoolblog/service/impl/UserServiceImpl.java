@@ -52,7 +52,7 @@ public class UserServiceImpl implements UserService {
         if (user != null) {
             try {
                 // 仅在登录时使用登录名，其他情况下依旧使用id来确定用户身份
-                String token = JwtTokenUtil.createToken(user.getId().toString(), user.getRole(), user.getName());
+                String token = JwtTokenUtil.createToken(user.getId().toString(), user.getRole(), user.getRealName());
                 HashMap<String, Object> data = new HashMap<>();
                 data.put("token", token);
                 data.put("user", user);
@@ -102,12 +102,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String insertUser(QueryModel model) {
-        List<String> querys = model.getQueryList();
-        User user = new User();
-        user.setName(querys.get(0));
-        user.setCollege(querys.get(1));
-        user.setTel(querys.get(2));
-        user.setRole(Integer.parseInt(querys.get(3)));
+        User user = model.getUser();
         user.setReg(new Timestamp(System.currentTimeMillis()));
         user.setPassword(CommonUtil.getHash("111111", "MD5"));
         if (userRepository.save(user) != null) {
@@ -145,7 +140,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public String lst(QueryModel model, Long userId) {
         // 定义分页，获取全部用户
-        // TODO Page size must not be less than one!添加该异常验证
         Pageable pageable = PageRequest.of(model.getPage(), model.getRow());
         List<User> list = new ArrayList<>();
         long totalPage = 0L;
@@ -155,16 +149,25 @@ public class UserServiceImpl implements UserService {
             list = page.getContent();
         } else if (model.getQueryType() == AppConst.QUERY_USERLIST_USERNAME) {
             // 此处一定只有一个数据或者没有数据
-            Long id = model.getUser().getId();
-            userRepository.findById(id).ifPresent(list::add);
+            String id = model.getUser().getLoginname();
+            User user = userRepository.findByLoginname(id);
+            if (user != null) {
+                list.add(user);
+            }
             totalPage = (long) list.size();
         } else if (model.getQueryType() >= AppConst.QUERY_USERLIST_Q) {
             User user = model.getUser();
-            user.setName("%" + (user.getName() == null ? "" : user.getName()) + "%");
-            user.setCollege("%" + (user.getCollege() == null ? "" : user.getCollege()) + "%");
-            Page<User> page = userRepository.findAllByNameLikeAndCollegeLike(user.getName(), user.getCollege(), pageable);
-            totalPage = page.getTotalElements();
-            list = page.getContent();
+            if (user.getRealName() != null) {
+                user.setRealName("%" + user.getRealName() + "%");
+                Page<User> page = userRepository.findByRealNameLike(user.getRealName(), pageable);
+                totalPage = page.getTotalElements();
+                list = page.getContent();
+            } else if (user.getCollege() != null) {
+                user.setCollege("%" + user.getCollege() + "%");
+                Page<User> page = userRepository.findByCollegeLike(user.getCollege(), pageable);
+                totalPage = page.getTotalElements();
+                list = page.getContent();
+            }
         }
         HashMap<String, Object> data = new HashMap<>();
         data.put("lst", list);
@@ -173,8 +176,65 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String deleteUser(Long userid) {
-        userRepository.deleteById(userid);
+    public String changePwd(String oldPwd, String newPwd, Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        if(user!= null){
+            // 验证旧密码是否正确
+            if(user.getPassword().equals(CommonUtil.getHash(oldPwd, "MD5"))) {
+                user.setPassword(CommonUtil.getHash(newPwd, "MD5"));
+                if (userRepository.save(user)!= null){
+                    return ResponseUtil.getResult(ResponseCode.T_APP_SUCCESS_UPDATE);
+                }
+            }else{
+                return ResponseUtil.getResult(ResponseCode.T_USER_FAIL_PWD_INVALID);
+            }
+        }
+        return ResponseUtil.getResult(ResponseCode.T_APP_FAIL_UPDATE);
+    }
+
+    @Override
+    public String resetPwd(Long userId, int power) {
+        // 重置密码功能仅用于上级改变下级
+        User user = userRepository.findById(userId).orElse(null);
+        if (user!=null){
+            if (user.getRole() >= power) {
+                return ResponseUtil.getResult(ResponseCode.T_APP_NO_POWER);
+            }else{
+                user.setPassword(CommonUtil.getHash("111111", "MD5"));
+                if (userRepository.save(user)!=null) {
+                    return ResponseUtil.getResult(ResponseCode.N_SUCCESS);
+                }
+            }
+        }
+        return ResponseUtil.getResult(ResponseCode.T_APP_FAIL_UPLOAD);
+    }
+
+    @Override
+    public String deleteUser(Long userid, int role) {
+        User user = userRepository.findById(userid).orElse(null);
+        if (user!= null) {
+            if (role == AppConst.USER_TEACHER && user.getRole() >AppConst.USER_STU) { // 教师只能操作学生信息
+                return ResponseUtil.getResult(ResponseCode.T_APP_NO_POWER);
+            }
+            userRepository.delete(user);
+            return ResponseUtil.getResult(ResponseCode.T_APP_SUCCESS_DELETE);
+        }
+        return ResponseUtil.getResult(ResponseCode.T_USER_EMPTY_FIND);
+    }
+
+    @Override
+    public String batchDelete(List<String> Ids, int role) {
+        List<Long> rs = new ArrayList<>();
+        for(String s : Ids){
+            rs.add(Long.parseLong(s));
+        }
+        List<User> users = userRepository.findByIdIn(rs);
+        for(User user : users) { // 移除不允许操作的用户信息
+            if (role == AppConst.USER_TEACHER && user.getRole() >AppConst.USER_STU) { // 教师只能操作学生信息
+                users.remove(user);
+            }
+        }
+        userRepository.deleteInBatch(users);
         return ResponseUtil.getResult(ResponseCode.T_APP_SUCCESS_DELETE);
     }
 
@@ -182,7 +242,7 @@ public class UserServiceImpl implements UserService {
     public String uploadAvatar(MultipartFile file, HttpServletRequest req, Long userId) {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
-            return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.T_USER_EMPTY_FIND,null));
+            return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.T_USER_EMPTY_FIND, null));
         }
         String realPath = uploadRoot + "avatar/";
         String format = simpleDateFormat.format(new Date());
@@ -209,23 +269,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String uploadExcel(MultipartFile excel, HttpServletRequest req) {
+    public String uploadExcel(MultipartFile excel, HttpServletRequest req, int role) {
         try {
             Map<Integer, Map<String, Object>> map = excelUtil.getExcelContent(excel);
             // 构建User对象
             List<User> users = new ArrayList<>();
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             String defaultPwd = CommonUtil.getHash("111111", "MD5"); // 默认密码，采用md5加密
-            for(Map<String, Object> u : map.values()){
+            for (Map<String, Object> u : map.values()) {
                 User user = new User();
                 // 判断是否有必填字段
-                if(u.containsKey("loginname") && u.containsKey("role") && u.containsKey("name")) {
+                if (u.containsKey("loginname") && u.containsKey("role") && u.containsKey("name")) {
                     user.setLoginname(String.valueOf(u.get("loginname")));
                     Double d = Double.parseDouble(String.valueOf(u.get("role")));
+                    if (d >= role) { // 只能批量上传等级低于自己的用户
+                        return ResponseUtil.getResult(ResponseCode.T_APP_NO_POWER);
+                    }
                     user.setRole(d.intValue());
-                    user.setName(String.valueOf(u.get("name")));
-                }else {
-                    return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.N_APP_NO_PARAMS,null));
+                    user.setRealName(String.valueOf(u.get("name")));
+                } else {
+                    return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.N_APP_NO_PARAMS, null));
                 }
                 // 插入默认值
                 user.setPassword(defaultPwd);
@@ -237,21 +300,24 @@ public class UserServiceImpl implements UserService {
                 if (u.containsKey("college")) {
                     user.setCollege(String.valueOf(u.get("college")));
                 }
-                if (u.containsKey("email")){
+                if (u.containsKey("pro")) {
+                    user.setPro(String.valueOf(u.get("pro")));
+                }
+                if (u.containsKey("email")) {
                     user.setMail(String.valueOf(u.get("email")));
                 }
-                if (u.containsKey("tel")){
+                if (u.containsKey("tel")) {
                     user.setTel(String.valueOf(u.get("tel")));
                 }
                 users.add(user);
             }
-            if (userRepository.saveAll(users)!=null){
-                return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.T_SUCCESS,null));
+            if (userRepository.saveAll(users) != null) {
+                return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.T_SUCCESS, null));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.T_APP_FAIL_SAVE,null));
+        return ResponseUtil.revert(ResponseUtil.getResultMap(ResponseCode.T_APP_FAIL_SAVE, null));
     }
 
 }

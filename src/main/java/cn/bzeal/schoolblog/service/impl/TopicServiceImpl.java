@@ -1,5 +1,6 @@
 package cn.bzeal.schoolblog.service.impl;
 
+import cn.bzeal.schoolblog.common.AppConst;
 import cn.bzeal.schoolblog.common.ResponseCode;
 import cn.bzeal.schoolblog.domain.*;
 import cn.bzeal.schoolblog.model.Qtopic;
@@ -141,19 +142,40 @@ public class TopicServiceImpl implements TopicService {
     @Override
     public String lst(QueryModel model) {
         PageRequest pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
-        Page<Topic> page = topicRepository.findAll(pageable);
+        HashMap<String, Object> data = new HashMap<>();
+        Page<Topic> page = null;
+        if (model.getQueryType() == AppConst.QUERY_ESSAY_ALL) { // 查询全部
+            page = topicRepository.findAll(pageable);
+        } else if (model.getQueryType() == AppConst.QUERY_ESSAY_LOGIN_NAME) { // 查找作者
+            User author = userRepository.findByLoginname(model.getUser().getLoginname());
+            if (author!= null) {
+                page = topicRepository.findByCreator(author, pageable);
+            }
+        }else if(model.getQueryType() >= AppConst.QUERY_ESSAY_KEYWORDS) { // 根据关键字
+            String k = "";
+            if (!StringUtils.isBlank(model.getTopic().getName())) {
+                k = "%" + model.getTopic().getName() + "%";
+                page = topicRepository.findByNameLike(k, pageable);
+            }else if(!StringUtils.isBlank(model.getTopic().getSummary())){
+                k = "%" + model.getTopic().getSummary() + "%";
+                page = topicRepository.findBySummaryLike(k, pageable);
+            }
+        }
         // 此时得到的对象并不是我们想要的结果，还需要对文章数量和用户数量进行计数
         List<Qtopic> list = new ArrayList<>();
-        for (Topic t : page.getContent()) {
-            Qtopic tp = new Qtopic();
-            BeanUtils.copyProperties(t, tp); // 复制目标属性
-            tp.setEssaycount(t.getArticles().size());
-            tp.setUsercount(t.getFollowers().size() + 1);
-            list.add(tp);
+        if (page!= null) {
+            for (Topic t : page.getContent()) {
+                Qtopic tp = new Qtopic();
+                BeanUtils.copyProperties(t, tp); // 复制目标属性
+                tp.setEssaycount(t.getArticles().size());
+                tp.setUsercount(t.getFollowers().size() + 1);
+                list.add(tp);
+            }
+            data.put("lst", list);
+            data.put("total", page.getTotalElements());
+        }else {
+            data.put("total", 0);
         }
-        HashMap<String, Object> data = new HashMap<>();
-        data.put("lst", list);
-        data.put("total", page.getTotalElements());
         return ResponseUtil.revertTopicList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
     }
 
@@ -182,6 +204,9 @@ public class TopicServiceImpl implements TopicService {
                     qtopic.setIsfollow(true);
                     break;
                 }
+            }
+            if (!qtopic.isIsfollow() && topic.getCreator().getId().equals(userId)) {
+                qtopic.setIsfollow(true);
             }
             HashMap<String, Object> data = new HashMap<>();
             data.put("topic", qtopic);

@@ -54,10 +54,31 @@ public class ArticleServiceImpl implements ArticleService {
     public String lst(QueryModel model) {
         // 定义分页，获取全部文章
         Pageable pageable = PageRequest.of(model.getPage(), model.getRow(), new Sort(Sort.Direction.DESC, "id"));
-        Page<Article> page = articleRepository.findAll(pageable);
         HashMap<String, Object> data = new HashMap<>();
-        data.put("lst", page.getContent());
-        data.put("total", page.getTotalElements());
+        Page<Article> page = null;
+        if (model.getArticle().getType() == AppConst.QUERY_ESSAY_ALL) { // 查询全部
+            page = articleRepository.findAll(pageable);
+        } else if (model.getArticle().getType() == AppConst.QUERY_ESSAY_LOGIN_NAME) { // 查找作者
+            User author = userRepository.findByLoginname(model.getUser().getLoginname());
+            if (author!= null) {
+                page = articleRepository.findByAuthor(author, pageable);
+            }
+        }else if(model.getArticle().getType() >= AppConst.QUERY_ESSAY_KEYWORDS) { // 根据关键字
+            String k = "";
+            if (!StringUtils.isBlank(model.getArticle().getTitle())) {
+                k = "%" + model.getArticle().getTitle() + "%";
+                page = articleRepository.findByTitleLike(k, pageable);
+            }else if(!StringUtils.isBlank(model.getArticle().getContent())){
+                k = "%" + model.getArticle().getContent() + "%";
+                page = articleRepository.findByTitleLike(k, pageable);
+            }
+        }
+        if (page!=null) {
+            data.put("lst", page.getContent());
+            data.put("total", page.getTotalElements());
+        } else {
+            data.put("total", 0);
+        }
         return ResponseUtil.revertArticleList(ResponseUtil.getResultMap(ResponseCode.N_SUCCESS, data));
     }
 
@@ -206,7 +227,7 @@ public class ArticleServiceImpl implements ArticleService {
                 }
             }
             if (articleRepository.save(article) != null) {
-                return ResponseUtil.getResult(ResponseCode.T_SUCCESS);
+                return ResponseUtil.getResult(ResponseCode.T_APP_SUCCESS_ADD);
             } else {
                 return ResponseUtil.getResult(ResponseCode.T_APP_FAIL_SAVE);
             }
@@ -321,7 +342,7 @@ public class ArticleServiceImpl implements ArticleService {
         message.setCreator(creator);
         message.setTarget(target);
         message.setType(AppConst.MESSAGE_TYPE_SYSTEM);
-        message.setContent(creator.getName() + " 收藏了你的文章：《" + title + "》");
+        message.setContent(" 收藏了你的文章：《" + title + "》");
         messageRepository.save(message);
     }
 
